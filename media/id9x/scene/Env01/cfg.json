@@ -1,0 +1,8 @@
+{
+    "load": {
+        "type": "scene",
+        "object": "env.json",
+        "drl": "env.drl",
+        "env": "./textures/hdr.hdr"
+    }
+}

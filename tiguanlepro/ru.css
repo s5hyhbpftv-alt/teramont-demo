@@ -1,0 +1,198 @@
+/* Поправки под русский текст.
+   Заводская вёрстка рассчитана на иероглифы: там, где по-китайски четыре
+   знака, по-русски двадцать букв. Ниже — только то, что даёт длинной
+   строке поместиться. Стили завода не трогаем: этот файл подключён
+   последним и перекрывает их точечно. */
+
+/* Кнопки первого экрана и формы: текст переносится и ужимается,
+   вместо того чтобы вылезать за овал */
+.kv .swiper-slide button,
+.kv .swiper-slide .btn,
+.newDrive button,
+.appdown button,
+.quanyi button,
+[class*="sspage"] button {
+  white-space: normal !important;
+  line-height: 1.15 !important;
+  padding-left: 0.6em !important;
+  padding-right: 0.6em !important;
+  font-size: clamp(0.62rem, 3.2vw, 1rem) !important;
+  height: auto !important;
+  min-height: 2.6em !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+}
+
+/* Заголовки разделов: у завода они в одну строку по ширине экрана */
+[class*="sspage"] .tit,
+[class*="sspage"] .dec,
+.sloganText,
+.sloganPrice {
+  white-space: normal !important;
+  word-break: normal !important;
+  overflow-wrap: anywhere;
+  line-height: 1.2 !important;
+}
+
+/* Подписи в лентах: две-три строки вместо одной длинной */
+.swiper-slide .tit,
+.swiper-slide .dec {
+  max-width: 100%;
+}
+
+/* Таблица характеристик: русские названия строк длиннее китайских */
+.newParameter td,
+.newParameter th,
+[class*="Parameter"] li {
+  white-space: normal !important;
+  line-height: 1.25 !important;
+}
+
+
+/* Кнопки первого экрана: у завода они `.btn` фиксированной ширины с
+   текстом в одну строку. По-русски строка вдвое длиннее — разрешаем
+   перенос и уменьшаем кегль ровно на этих кнопках. */
+.bannerBtn .btn,
+.bannerBtn a,
+.kv .btn,
+.btnWar .btn {
+  white-space: normal !important;
+  line-height: 1.1 !important;
+  font-size: clamp(0.6rem, 2.9vw, 0.95rem) !important;
+  padding: 0.5em 0.9em !important;
+  height: auto !important;
+  min-height: 2.4em !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  box-sizing: border-box !important;
+}
+
+
+/* --- Заводская обвязка убрана ---------------------------------------
+   Шапка, выезжающее меню, переключатель моделей, плавающие кнопки сбоку,
+   подвал и блок заводского сервиса — это чужой сайт вокруг нашей
+   страницы: финансирование, страховка и гарантия у нас свои. Прячем целиком, а не
+   вырезаем из разметки: копия должна пересобираться скриптом без правок
+   руками. */
+.headerWar,
+.navWar,
+.carWar,
+.footBtnWar,
+[class*="newFooter"],
+[class*="appdown"],
+[class*="newService"] {
+  display: none !important;
+}
+
+/* Шапка держала отступ сверху — забираем его себе */
+body {
+  padding-top: 0 !important;
+}
+
+/* --- Наша шапка ------------------------------------------------------
+   Заводская вёрстка масштабируется в rem: корневой кегль привязан к
+   ширине экрана, и вся страница растёт и сжимается целиком. Поэтому
+   шапка тоже в rem — тогда она держит тот же масштаб, что и всё
+   остальное, на любой ширине. Высота 3,4rem — ровно та, что была
+   у заводской шапки. */
+.нашаШапка {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 9999;
+  height: 3.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0 0.95rem;
+  background: rgb(11 12 14 / 0.92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid #22242a;
+  font-family: system-ui, -apple-system, 'Helvetica Neue', sans-serif;
+  color: #f4f5f7;
+}
+
+.нашаШапка button {
+  all: unset;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.нашаШапка .стрелка {
+  width: 0.38rem;
+  height: 0.38rem;
+  border-right: 1px solid currentColor;
+  border-bottom: 1px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 120ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.нашаШапка[data-открыт='да'] .стрелка {
+  transform: rotate(225deg) translate(-0.05rem, -0.05rem);
+}
+
+.нашаШапка .текущая {
+  font-size: 0.85rem;
+  color: #8a8f98;
+}
+
+.нашаШапка ul {
+  position: absolute;
+  top: 100%;
+  left: 0.95rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  width: 14.5rem;
+  list-style: none;
+  background: #0b0c0e;
+  border: 1px solid #22242a;
+  border-radius: 4px;
+  overflow: hidden;
+  display: none;
+}
+
+.нашаШапка[data-открыт='да'] ul {
+  display: block;
+}
+
+.нашаШапка li a {
+  display: block;
+  padding: 1.1rem 0.95rem;
+  border-bottom: 1px solid #22242a;
+  color: #f4f5f7;
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+
+.нашаШапка li:last-child a {
+  border-bottom: 0;
+}
+
+.нашаШапка li a small {
+  display: block;
+  margin-top: 0.2rem;
+  color: #8a8f98;
+  font-size: 0.7rem;
+}
+
+/* Первый экран начинался под заводской шапкой — сдвигаем под нашу */
+.kv {
+  padding-top: 3.4rem !important;
+}
+
+
+/* Карточка с мерчем в разделе «Узнать больше»: заводской магазин V Life
+   к продаже машины отношения не имеет. Убираем только её — соседняя
+   карточка с самой машиной остаётся. Ссылок у карточек нет, поэтому
+   цепляемся за порядок: мерч идёт вторым. */
+.newActivity_li:nth-of-type(2) {
+  display: none !important;
+}

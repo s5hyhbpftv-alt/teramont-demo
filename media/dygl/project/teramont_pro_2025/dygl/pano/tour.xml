@@ -1,0 +1,1194 @@
+<krpano title="Virtual Tour"  showlog="false" logkey ="false" showerrors ="false" onstart="startup" >
+	<!-- startup action - load the first scene -->
+	<events
+		onViewChange="onViewChange()"
+		onviewchanged="onViewChanged()"
+		onautorotatestop="copy(org_vlookat,view.vlookat);copy(org_hlookat,view.hlookat);"
+        onmousedown="onMouseDownEvent()"
+        onmouseup="onMouseUpEvent()"
+        onmousewheel="onMouseWheelEvent()"
+        onidle="onIdleEvent()"
+	/>
+	
+	<!-- ensure stagescale 2x for mobile devices (regardless if mobilescale is 0.5 or 1.0) -->
+	<!-- <krpano stagescale="calc:stagescale * 2" if="stagescale LT 1.0" devices="mobile" /> -->
+    
+    <!-- <memory maxmem="150" devices="mobile"/> -->
+
+    <display autofullscreen="false" />
+
+	<action name="initOrg">
+		copy(org_vlookat,view.vlookat);
+		copy(org_hlookat,view.hlookat);
+		set(view.camroll,270);
+	</action>
+
+	<action name='panoEmit' type='Javascript'><![CDATA[
+		window.panoEmit(arguments[1][1])
+	]]></action>
+
+    <action name='onMouseDownEvent' type='Javascript'><![CDATA[
+        window.adjustRotate = true;
+        window.panoMouseDown()
+    ]]></action>
+
+    <action name='onMouseUpEvent' type='Javascript'><![CDATA[
+        window.panoMouseUp()
+    ]]></action>
+
+    <action name='onMouseWheelEvent' type='Javascript'><![CDATA[
+        window.panoMouseWheel()
+    ]]></action>
+
+    <action name='onIdleEvent' type='Javascript'><![CDATA[
+        window.adjustRotate = false;
+        window.panoIdle()
+    ]]></action>
+
+    <action name='panoViewChange' type='Javascript'><![CDATA[
+        window.panoViewChange()
+    ]]></action>
+
+    <action name='rotateLookAt' type='Javascript'><![CDATA[
+		
+        if (window.dyglCssRotate && window.adjustRotate) {
+            if (!krpano.hlookatPre) krpano.hlookatPre = krpano.view.hlookat;
+            if (!krpano.vlookatPre) krpano.vlookatPre = krpano.view.vlookat;
+
+            var deltaH = krpano.view.hlookat - krpano.hlookatPre;
+            var deltaV = krpano.view.vlookat - krpano.vlookatPre;
+
+			krpano.view.hlookat = krpano.hlookatPre + deltaV;
+			krpano.view.vlookat = krpano.vlookatPre - deltaH;
+			
+			if (krpano.view.vlookat > 89) {
+                krpano.view.vlookat = 89;
+            } else if (krpano.view.vlookat < -89) {
+                krpano.view.vlookat = -89;
+            }
+        }
+		krpano.hlookatPre = krpano.view.hlookat;
+		krpano.vlookatPre = krpano.view.vlookat;
+
+    ]]></action>
+	
+	<action name="onViewChanged" type='Javascript'><![CDATA[
+		if (krpano.view.vlookat > 89) krpano.view.vlookat = 89;
+		if (krpano.view.vlookat < -89) krpano.view.vlookat = -89;
+	]]></action>
+
+	<action name="onViewChange">
+        rotateLookAt();
+
+		showlog(false);
+        if(autorotate.isrotating == false AND (view.hlookat != org_hlookat OR view.vlookat != org_vlookat) AND view.camroll == 270,
+            add(count,1);
+            trace(count);
+            sub(tmph , view.hlookat,org_hlookat);
+            sub(tmpv , view.vlookat,org_vlookat);
+            trace(count, '--', tmph, '--', tmpv, '--',view.vlookat, '--',  view.hlookat);
+            if(view.vlookat != 90 AND view.vlookat != -90, 
+                sub(view.vlookat, tmph);
+                sub(view.vlookat, tmpv);
+                add(view.hlookat, tmpv);
+                sub(view.hlookat, tmph);
+                mod(view.hlookat, 360);
+            );
+            copy(org_vlookat,view.vlookat);
+            copy(org_hlookat,view.hlookat);
+            copy(org_tmph,tmph);
+            copy(org_tmpv,tmpv);
+        );
+
+        panoViewChange();
+    </action>
+
+	<action name="startup" autorun="onstart"> 
+        set("autorotate.enabled",true);
+        set("autorotate.speed", 1.0);
+		set("autorotate.waittime", 3);
+        set("autorotate.horizon", 0);
+		set(org_vlookat,0);
+		set(org_hlookat,0);
+		set(count,0);
+        wait(0.1);
+		if(startscene === null OR !scene[get(startscene)], copy(startscene,scene[0].name); );
+			loadscene(get(startscene), null, MERGE, COLORBLEND(2.0, 0x000000, easeoutcubic));							
+			if(startactions !== null, startactions() );
+	</action>
+
+	<autorotate 
+        name="autorotate" 
+        enabled="false" 
+        waittime="3.0" 
+        speed="1.0" 
+        horizon="0.0"
+        tofov="120.0"
+    />
+
+	<action name="dygl_load_scene">
+		dygl_load_scene_do(%1,get(prev_hlookat),get(prev_vlookat),get(prev_fov));
+	</action>
+
+	<action name="dygl_load_scene_do">
+        <!-- loadscene(%1, null, MERGE, BLEND(1,easeoutcubic)); -->
+        loadscene(%1, null, MERGE | KEEPVIEW, BLEND(1.0, easeoutcubic));
+	</action>
+
+    <action name="dygl_check_scene_exist">
+    </action>
+
+	<action name="set_hotspot_transparent">
+		for(
+			set(i,0),
+			i LT hotspot.count,
+			inc(i),
+			if(!hotspot[get(i)].enabled,
+			  set(hotspot[get(i)].alpha, 0.0);
+		  	)
+        );
+	</action>
+
+	<action name="set_hotspot_display">
+	    set(hotspot[%1].alpha,1.0);
+	</action>
+
+	<contextmenu 
+		fullscreen="false"          
+		native="false"              
+		versioninfo="false"          
+		touch="false"               
+		customstyle=""              
+		enterfs="Fullscreen"        
+		exitfs="Exit Fullscreen"    
+		>
+	</contextmenu>
+
+	<!-- 热点动画逐帧 -->
+	<action name="do_hotspot_animation">
+		registerattribute(xframes, calc((imagewidth / %1) BOR 0));
+		registerattribute(yframes, calc((imageheight / %2) BOR 0));
+		registerattribute(frames, calc(xframes * yframes));
+		registerattribute(frame, 0);
+ 		set(crop, '0|0|%1|%2');
+ 		setinterval(calc('crop_anim_' + name), calc(1.0 / %3),
+			if(loaded,
+				inc(frame);
+				if(frame GE frames, if(onlastframe !== null, onlastframe() ); set(frame,0); );
+				mod(xpos, frame, xframes);
+				div(ypos, frame, xframes);
+				Math.floor(ypos);
+				mul(xpos, %1);
+				mul(ypos, %2);
+				calc(crop, xpos + '|' + ypos + '|%1|%2');
+			  ,
+				clearinterval(calc('crop_anim_' + name));
+			  );
+		  );
+    </action>
+
+    <action name="close_btn">
+        if(!layer[%1].visible,
+            tween(layer[%1].alpha,1);
+            delayedcall(1,set(visible,true)),
+                                set(layer[%1].visible,false);
+                                set(autorotate[rotate_car].enabled,true);
+            tween({layer[%1].alpha,0},{layer[%1].scale,0})
+            );
+    </action>
+
+    <view fov="95" fovmin="70" fovmax="110" />
+
+    <style name="cubeface" distorted="true" width="1000" height="1000" enabled="false" alpha="0.0" />
+	
+
+	
+    <!-- trendline380_yyh_front 云影黑-->
+	<scene name="trendline380_yyh_front" title="trendline380_yyh_front" onstart="" thumburl="panos/trendline380_yyh_front.tiles/thumb.jpg" lat="" lng="" heading="">
+		<view hlookat="0.0" vlookat="20" fovtype="MFOV" fov="90"  fovmin="60" fovmax="100" limitview="auto" />
+		<preview url="panos/trendline380_yyh_front.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/trendline380_yyh_front.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,768,1664,3200" />
+		</image>	
+
+        <hotspot name="black_cubefront" style="cubeface" url="hotspot/front/black_cubefront.png" ath="0" atv="0" />
+        <hotspot name="black_cubeback" style="cubeface" url="hotspot/front/black_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="black_cubeleft" style="cubeface" url="hotspot/front/black_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="black_cuberight" style="cubeface" url="hotspot/front/black_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="black_cubetop" style="cubeface" url="hotspot/front/black_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="black_cubebottom" style="cubeface" url="hotspot/front/black_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="brown_cubefront" style="cubeface" url="hotspot/front/brown_cubefront.png" ath="0" atv="0" />
+        <hotspot name="brown_cubeback" style="cubeface" url="hotspot/front/brown_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="brown_cubeleft" style="cubeface" url="hotspot/front/brown_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="brown_cuberight" style="cubeface" url="hotspot/front/brown_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="brown_cubetop" style="cubeface" url="hotspot/front/brown_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="brown_cubebottom" style="cubeface" url="hotspot/front/brown_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="light_cubefront" style="cubeface" url="hotspot/front/light_cubefront.png" ath="0" atv="0" />
+        <hotspot name="light_cubeback" style="cubeface" url="hotspot/front/light_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="light_cubeleft" style="cubeface" url="hotspot/front/light_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="light_cuberight" style="cubeface" url="hotspot/front/light_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="light_cubetop" style="cubeface" url="hotspot/front/light_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="light_cubebottom" style="cubeface" url="hotspot/front/light_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="violet_cubefront" style="cubeface" url="hotspot/front/violet_cubefront.png" ath="0" atv="0" />
+        <hotspot name="violet_cubeback" style="cubeface" url="hotspot/front/violet_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="violet_cubeleft" style="cubeface" url="hotspot/front/violet_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="violet_cuberight" style="cubeface" url="hotspot/front/violet_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="violet_cubetop" style="cubeface" url="hotspot/front/violet_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="violet_cubebottom" style="cubeface" url="hotspot/front/violet_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="white_cubefront" style="cubeface" url="hotspot/front/white_cubefront.png" ath="0" atv="0" />
+        <hotspot name="white_cubeback" style="cubeface" url="hotspot/front/white_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="white_cubeleft" style="cubeface" url="hotspot/front/white_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="white_cuberight" style="cubeface" url="hotspot/front/white_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="white_cubetop" style="cubeface" url="hotspot/front/white_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="white_cubebottom" style="cubeface" url="hotspot/front/white_cubebottom.png" ath="0" atv="+90" />
+
+	</scene>
+    <!-- trendline380_yyh_back 云影黑-->
+	<scene name="trendline380_yyh_back" title="trendline380_yyh_back" onstart="" thumburl="panos/trendline380_yyh_back.tiles/thumb.jpg" lat="" lng="" heading="">
+		<view hlookat="0.0" vlookat="20" fovtype="MFOV" fov="90"  fovmin="60" fovmax="100" limitview="auto" />
+		<preview url="panos/trendline380_yyh_back.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/trendline380_yyh_back.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,768,1664,3200" />
+		</image>	
+
+        <hotspot name="black_cubefront" style="cubeface" url="hotspot/back/black_cubefront.png" ath="0" atv="0" />
+        <hotspot name="black_cubeback" style="cubeface" url="hotspot/back/black_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="black_cubeleft" style="cubeface" url="hotspot/back/black_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="black_cuberight" style="cubeface" url="hotspot/back/black_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="black_cubetop" style="cubeface" url="hotspot/back/black_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="black_cubebottom" style="cubeface" url="hotspot/back/black_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="brown_cubefront" style="cubeface" url="hotspot/back/brown_cubefront.png" ath="0" atv="0" />
+        <hotspot name="brown_cubeback" style="cubeface" url="hotspot/back/brown_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="brown_cubeleft" style="cubeface" url="hotspot/back/brown_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="brown_cuberight" style="cubeface" url="hotspot/back/brown_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="brown_cubetop" style="cubeface" url="hotspot/back/brown_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="brown_cubebottom" style="cubeface" url="hotspot/back/brown_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="light_cubefront" style="cubeface" url="hotspot/back/light_cubefront.png" ath="0" atv="0" />
+        <hotspot name="light_cubeback" style="cubeface" url="hotspot/back/light_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="light_cubeleft" style="cubeface" url="hotspot/back/light_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="light_cuberight" style="cubeface" url="hotspot/back/light_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="light_cubetop" style="cubeface" url="hotspot/back/light_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="light_cubebottom" style="cubeface" url="hotspot/back/light_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="violet_cubefront" style="cubeface" url="hotspot/back/violet_cubefront.png" ath="0" atv="0" />
+        <hotspot name="violet_cubeback" style="cubeface" url="hotspot/back/violet_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="violet_cubeleft" style="cubeface" url="hotspot/back/violet_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="violet_cuberight" style="cubeface" url="hotspot/back/violet_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="violet_cubetop" style="cubeface" url="hotspot/back/violet_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="violet_cubebottom" style="cubeface" url="hotspot/back/violet_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="white_cubefront" style="cubeface" url="hotspot/back/white_cubefront.png" ath="0" atv="0" />
+        <hotspot name="white_cubeback" style="cubeface" url="hotspot/back/white_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="white_cubeleft" style="cubeface" url="hotspot/back/white_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="white_cuberight" style="cubeface" url="hotspot/back/white_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="white_cubetop" style="cubeface" url="hotspot/back/white_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="white_cubebottom" style="cubeface" url="hotspot/back/white_cubebottom.png" ath="0" atv="+90" />
+
+	</scene>
+	
+    <!-- trendline380_hyh_front 黑夜黑-->
+	<scene name="trendline380_hyh_front" title="trendline380_hyh_front" onstart="" thumburl="panos/trendline380_hyh_front.tiles/thumb.jpg" lat="" lng="" heading="">
+		<view hlookat="0.0" vlookat="20" fovtype="MFOV" fov="90"  fovmin="60" fovmax="100" limitview="auto" />
+		<preview url="panos/trendline380_hyh_front.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/trendline380_hyh_front.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,768,1664,3200" />
+		</image>	
+
+        <hotspot name="black_cubefront" style="cubeface" url="hotspot/front/black_cubefront.png" ath="0" atv="0" />
+        <hotspot name="black_cubeback" style="cubeface" url="hotspot/front/black_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="black_cubeleft" style="cubeface" url="hotspot/front/black_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="black_cuberight" style="cubeface" url="hotspot/front/black_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="black_cubetop" style="cubeface" url="hotspot/front/black_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="black_cubebottom" style="cubeface" url="hotspot/front/black_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="brown_cubefront" style="cubeface" url="hotspot/front/brown_cubefront.png" ath="0" atv="0" />
+        <hotspot name="brown_cubeback" style="cubeface" url="hotspot/front/brown_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="brown_cubeleft" style="cubeface" url="hotspot/front/brown_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="brown_cuberight" style="cubeface" url="hotspot/front/brown_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="brown_cubetop" style="cubeface" url="hotspot/front/brown_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="brown_cubebottom" style="cubeface" url="hotspot/front/brown_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="light_cubefront" style="cubeface" url="hotspot/front/light_cubefront.png" ath="0" atv="0" />
+        <hotspot name="light_cubeback" style="cubeface" url="hotspot/front/light_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="light_cubeleft" style="cubeface" url="hotspot/front/light_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="light_cuberight" style="cubeface" url="hotspot/front/light_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="light_cubetop" style="cubeface" url="hotspot/front/light_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="light_cubebottom" style="cubeface" url="hotspot/front/light_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="violet_cubefront" style="cubeface" url="hotspot/front/violet_cubefront.png" ath="0" atv="0" />
+        <hotspot name="violet_cubeback" style="cubeface" url="hotspot/front/violet_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="violet_cubeleft" style="cubeface" url="hotspot/front/violet_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="violet_cuberight" style="cubeface" url="hotspot/front/violet_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="violet_cubetop" style="cubeface" url="hotspot/front/violet_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="violet_cubebottom" style="cubeface" url="hotspot/front/violet_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="white_cubefront" style="cubeface" url="hotspot/front/white_cubefront.png" ath="0" atv="0" />
+        <hotspot name="white_cubeback" style="cubeface" url="hotspot/front/white_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="white_cubeleft" style="cubeface" url="hotspot/front/white_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="white_cuberight" style="cubeface" url="hotspot/front/white_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="white_cubetop" style="cubeface" url="hotspot/front/white_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="white_cubebottom" style="cubeface" url="hotspot/front/white_cubebottom.png" ath="0" atv="+90" />
+
+	</scene>
+    <!-- trendline380_hyh_back 黑夜黑-->
+	<scene name="trendline380_hyh_back" title="trendline380_hyh_back" onstart="" thumburl="panos/trendline380_hyh_back.tiles/thumb.jpg" lat="" lng="" heading="">
+		<view hlookat="0.0" vlookat="20" fovtype="MFOV" fov="90"  fovmin="60" fovmax="100" limitview="auto" />
+		<preview url="panos/trendline380_hyh_back.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/trendline380_hyh_back.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,768,1664,3200" />
+		</image>	
+
+        <hotspot name="black_cubefront" style="cubeface" url="hotspot/back/black_cubefront.png" ath="0" atv="0" />
+        <hotspot name="black_cubeback" style="cubeface" url="hotspot/back/black_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="black_cubeleft" style="cubeface" url="hotspot/back/black_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="black_cuberight" style="cubeface" url="hotspot/back/black_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="black_cubetop" style="cubeface" url="hotspot/back/black_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="black_cubebottom" style="cubeface" url="hotspot/back/black_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="brown_cubefront" style="cubeface" url="hotspot/back/brown_cubefront.png" ath="0" atv="0" />
+        <hotspot name="brown_cubeback" style="cubeface" url="hotspot/back/brown_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="brown_cubeleft" style="cubeface" url="hotspot/back/brown_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="brown_cuberight" style="cubeface" url="hotspot/back/brown_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="brown_cubetop" style="cubeface" url="hotspot/back/brown_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="brown_cubebottom" style="cubeface" url="hotspot/back/brown_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="light_cubefront" style="cubeface" url="hotspot/back/light_cubefront.png" ath="0" atv="0" />
+        <hotspot name="light_cubeback" style="cubeface" url="hotspot/back/light_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="light_cubeleft" style="cubeface" url="hotspot/back/light_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="light_cuberight" style="cubeface" url="hotspot/back/light_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="light_cubetop" style="cubeface" url="hotspot/back/light_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="light_cubebottom" style="cubeface" url="hotspot/back/light_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="violet_cubefront" style="cubeface" url="hotspot/back/violet_cubefront.png" ath="0" atv="0" />
+        <hotspot name="violet_cubeback" style="cubeface" url="hotspot/back/violet_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="violet_cubeleft" style="cubeface" url="hotspot/back/violet_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="violet_cuberight" style="cubeface" url="hotspot/back/violet_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="violet_cubetop" style="cubeface" url="hotspot/back/violet_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="violet_cubebottom" style="cubeface" url="hotspot/back/violet_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="white_cubefront" style="cubeface" url="hotspot/back/white_cubefront.png" ath="0" atv="0" />
+        <hotspot name="white_cubeback" style="cubeface" url="hotspot/back/white_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="white_cubeleft" style="cubeface" url="hotspot/back/white_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="white_cuberight" style="cubeface" url="hotspot/back/white_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="white_cubetop" style="cubeface" url="hotspot/back/white_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="white_cubebottom" style="cubeface" url="hotspot/back/white_cubebottom.png" ath="0" atv="+90" />
+
+	</scene>
+
+
+
+    <!-- comfortline380_qyl_front 浅云绿-->
+	<scene name="comfortline380_qyl_front" title="comfortline380_qyl_front" onstart="" thumburl="panos/comfortline380_qyl_front.tiles/thumb.jpg" lat="" lng="" heading="">
+		<view hlookat="0.0" vlookat="20" fovtype="MFOV" fov="90"  fovmin="60" fovmax="100" limitview="auto" />
+		<preview url="panos/comfortline380_qyl_front.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/comfortline380_qyl_front.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,768,1664,3200" />
+		</image>	
+
+        <hotspot name="black_cubefront" style="cubeface" url="hotspot/front/black_cubefront.png" ath="0" atv="0" />
+        <hotspot name="black_cubeback" style="cubeface" url="hotspot/front/black_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="black_cubeleft" style="cubeface" url="hotspot/front/black_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="black_cuberight" style="cubeface" url="hotspot/front/black_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="black_cubetop" style="cubeface" url="hotspot/front/black_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="black_cubebottom" style="cubeface" url="hotspot/front/black_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="brown_cubefront" style="cubeface" url="hotspot/front/brown_cubefront.png" ath="0" atv="0" />
+        <hotspot name="brown_cubeback" style="cubeface" url="hotspot/front/brown_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="brown_cubeleft" style="cubeface" url="hotspot/front/brown_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="brown_cuberight" style="cubeface" url="hotspot/front/brown_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="brown_cubetop" style="cubeface" url="hotspot/front/brown_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="brown_cubebottom" style="cubeface" url="hotspot/front/brown_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="light_cubefront" style="cubeface" url="hotspot/front/light_cubefront.png" ath="0" atv="0" />
+        <hotspot name="light_cubeback" style="cubeface" url="hotspot/front/light_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="light_cubeleft" style="cubeface" url="hotspot/front/light_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="light_cuberight" style="cubeface" url="hotspot/front/light_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="light_cubetop" style="cubeface" url="hotspot/front/light_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="light_cubebottom" style="cubeface" url="hotspot/front/light_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="violet_cubefront" style="cubeface" url="hotspot/front/violet_cubefront.png" ath="0" atv="0" />
+        <hotspot name="violet_cubeback" style="cubeface" url="hotspot/front/violet_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="violet_cubeleft" style="cubeface" url="hotspot/front/violet_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="violet_cuberight" style="cubeface" url="hotspot/front/violet_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="violet_cubetop" style="cubeface" url="hotspot/front/violet_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="violet_cubebottom" style="cubeface" url="hotspot/front/violet_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="white_cubefront" style="cubeface" url="hotspot/front/white_cubefront.png" ath="0" atv="0" />
+        <hotspot name="white_cubeback" style="cubeface" url="hotspot/front/white_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="white_cubeleft" style="cubeface" url="hotspot/front/white_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="white_cuberight" style="cubeface" url="hotspot/front/white_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="white_cubetop" style="cubeface" url="hotspot/front/white_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="white_cubebottom" style="cubeface" url="hotspot/front/white_cubebottom.png" ath="0" atv="+90" />
+
+	</scene>
+    <!-- comfortline380_qyl_back 浅云绿-->
+    <scene name="comfortline380_qyl_back" title="comfortline380_qyl_back" onstart="" thumburl="panos/comfortline380_qyl_back.tiles/thumb.jpg" lat="" lng="" heading="">
+		<view hlookat="0.0" vlookat="20" fovtype="MFOV" fov="90"  fovmin="60" fovmax="100" limitview="auto" />
+		<preview url="panos/comfortline380_qyl_back.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/comfortline380_qyl_back.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,768,1664,3200" />
+		</image>	
+
+        <hotspot name="black_cubefront" style="cubeface" url="hotspot/back/black_cubefront.png" ath="0" atv="0" />
+        <hotspot name="black_cubeback" style="cubeface" url="hotspot/back/black_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="black_cubeleft" style="cubeface" url="hotspot/back/black_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="black_cuberight" style="cubeface" url="hotspot/back/black_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="black_cubetop" style="cubeface" url="hotspot/back/black_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="black_cubebottom" style="cubeface" url="hotspot/back/black_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="brown_cubefront" style="cubeface" url="hotspot/back/brown_cubefront.png" ath="0" atv="0" />
+        <hotspot name="brown_cubeback" style="cubeface" url="hotspot/back/brown_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="brown_cubeleft" style="cubeface" url="hotspot/back/brown_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="brown_cuberight" style="cubeface" url="hotspot/back/brown_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="brown_cubetop" style="cubeface" url="hotspot/back/brown_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="brown_cubebottom" style="cubeface" url="hotspot/back/brown_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="light_cubefront" style="cubeface" url="hotspot/back/light_cubefront.png" ath="0" atv="0" />
+        <hotspot name="light_cubeback" style="cubeface" url="hotspot/back/light_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="light_cubeleft" style="cubeface" url="hotspot/back/light_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="light_cuberight" style="cubeface" url="hotspot/back/light_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="light_cubetop" style="cubeface" url="hotspot/back/light_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="light_cubebottom" style="cubeface" url="hotspot/back/light_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="violet_cubefront" style="cubeface" url="hotspot/back/violet_cubefront.png" ath="0" atv="0" />
+        <hotspot name="violet_cubeback" style="cubeface" url="hotspot/back/violet_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="violet_cubeleft" style="cubeface" url="hotspot/back/violet_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="violet_cuberight" style="cubeface" url="hotspot/back/violet_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="violet_cubetop" style="cubeface" url="hotspot/back/violet_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="violet_cubebottom" style="cubeface" url="hotspot/back/violet_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="white_cubefront" style="cubeface" url="hotspot/back/white_cubefront.png" ath="0" atv="0" />
+        <hotspot name="white_cubeback" style="cubeface" url="hotspot/back/white_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="white_cubeleft" style="cubeface" url="hotspot/back/white_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="white_cuberight" style="cubeface" url="hotspot/back/white_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="white_cubetop" style="cubeface" url="hotspot/back/white_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="white_cubebottom" style="cubeface" url="hotspot/back/white_cubebottom.png" ath="0" atv="+90" />
+
+	</scene>
+
+    <!-- comfortline380_yhb_front 云海白-->
+	<scene name="comfortline380_yhb_front" title="comfortline380_yhb_front" onstart="" thumburl="panos/comfortline380_yhb_front.tiles/thumb.jpg" lat="" lng="" heading="">
+		<view hlookat="0.0" vlookat="20" fovtype="MFOV" fov="90"  fovmin="60" fovmax="100" limitview="auto" />
+		<preview url="panos/comfortline380_yhb_front.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/comfortline380_yhb_front.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,768,1664,3200" />
+		</image>	
+
+        <hotspot name="black_cubefront" style="cubeface" url="hotspot/front/black_cubefront.png" ath="0" atv="0" />
+        <hotspot name="black_cubeback" style="cubeface" url="hotspot/front/black_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="black_cubeleft" style="cubeface" url="hotspot/front/black_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="black_cuberight" style="cubeface" url="hotspot/front/black_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="black_cubetop" style="cubeface" url="hotspot/front/black_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="black_cubebottom" style="cubeface" url="hotspot/front/black_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="brown_cubefront" style="cubeface" url="hotspot/front/brown_cubefront.png" ath="0" atv="0" />
+        <hotspot name="brown_cubeback" style="cubeface" url="hotspot/front/brown_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="brown_cubeleft" style="cubeface" url="hotspot/front/brown_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="brown_cuberight" style="cubeface" url="hotspot/front/brown_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="brown_cubetop" style="cubeface" url="hotspot/front/brown_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="brown_cubebottom" style="cubeface" url="hotspot/front/brown_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="light_cubefront" style="cubeface" url="hotspot/front/light_cubefront.png" ath="0" atv="0" />
+        <hotspot name="light_cubeback" style="cubeface" url="hotspot/front/light_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="light_cubeleft" style="cubeface" url="hotspot/front/light_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="light_cuberight" style="cubeface" url="hotspot/front/light_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="light_cubetop" style="cubeface" url="hotspot/front/light_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="light_cubebottom" style="cubeface" url="hotspot/front/light_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="violet_cubefront" style="cubeface" url="hotspot/front/violet_cubefront.png" ath="0" atv="0" />
+        <hotspot name="violet_cubeback" style="cubeface" url="hotspot/front/violet_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="violet_cubeleft" style="cubeface" url="hotspot/front/violet_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="violet_cuberight" style="cubeface" url="hotspot/front/violet_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="violet_cubetop" style="cubeface" url="hotspot/front/violet_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="violet_cubebottom" style="cubeface" url="hotspot/front/violet_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="white_cubefront" style="cubeface" url="hotspot/front/white_cubefront.png" ath="0" atv="0" />
+        <hotspot name="white_cubeback" style="cubeface" url="hotspot/front/white_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="white_cubeleft" style="cubeface" url="hotspot/front/white_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="white_cuberight" style="cubeface" url="hotspot/front/white_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="white_cubetop" style="cubeface" url="hotspot/front/white_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="white_cubebottom" style="cubeface" url="hotspot/front/white_cubebottom.png" ath="0" atv="+90" />
+
+	</scene>
+    <!-- comfortline380_yhb_back 云海白-->
+	<scene name="comfortline380_yhb_back" title="comfortline380_yhb_back" onstart="" thumburl="panos/comfortline380_yhb_back.tiles/thumb.jpg" lat="" lng="" heading="">
+		<view hlookat="0.0" vlookat="20" fovtype="MFOV" fov="90"  fovmin="60" fovmax="100" limitview="auto" />
+		<preview url="panos/comfortline380_yhb_back.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/comfortline380_yhb_back.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,768,1664,3200" />
+		</image>	
+
+        <hotspot name="black_cubefront" style="cubeface" url="hotspot/back/black_cubefront.png" ath="0" atv="0" />
+        <hotspot name="black_cubeback" style="cubeface" url="hotspot/back/black_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="black_cubeleft" style="cubeface" url="hotspot/back/black_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="black_cuberight" style="cubeface" url="hotspot/back/black_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="black_cubetop" style="cubeface" url="hotspot/back/black_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="black_cubebottom" style="cubeface" url="hotspot/back/black_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="brown_cubefront" style="cubeface" url="hotspot/back/brown_cubefront.png" ath="0" atv="0" />
+        <hotspot name="brown_cubeback" style="cubeface" url="hotspot/back/brown_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="brown_cubeleft" style="cubeface" url="hotspot/back/brown_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="brown_cuberight" style="cubeface" url="hotspot/back/brown_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="brown_cubetop" style="cubeface" url="hotspot/back/brown_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="brown_cubebottom" style="cubeface" url="hotspot/back/brown_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="light_cubefront" style="cubeface" url="hotspot/back/light_cubefront.png" ath="0" atv="0" />
+        <hotspot name="light_cubeback" style="cubeface" url="hotspot/back/light_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="light_cubeleft" style="cubeface" url="hotspot/back/light_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="light_cuberight" style="cubeface" url="hotspot/back/light_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="light_cubetop" style="cubeface" url="hotspot/back/light_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="light_cubebottom" style="cubeface" url="hotspot/back/light_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="violet_cubefront" style="cubeface" url="hotspot/back/violet_cubefront.png" ath="0" atv="0" />
+        <hotspot name="violet_cubeback" style="cubeface" url="hotspot/back/violet_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="violet_cubeleft" style="cubeface" url="hotspot/back/violet_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="violet_cuberight" style="cubeface" url="hotspot/back/violet_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="violet_cubetop" style="cubeface" url="hotspot/back/violet_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="violet_cubebottom" style="cubeface" url="hotspot/back/violet_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="white_cubefront" style="cubeface" url="hotspot/back/white_cubefront.png" ath="0" atv="0" />
+        <hotspot name="white_cubeback" style="cubeface" url="hotspot/back/white_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="white_cubeleft" style="cubeface" url="hotspot/back/white_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="white_cuberight" style="cubeface" url="hotspot/back/white_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="white_cubetop" style="cubeface" url="hotspot/back/white_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="white_cubebottom" style="cubeface" url="hotspot/back/white_cubebottom.png" ath="0" atv="+90" />
+
+	</scene>
+
+    <!-- comfortline380_hyh_front 黑夜黑-->
+	<scene name="comfortline380_hyh_front" title="comfortline380_hyh_front" onstart="" thumburl="panos/comfortline380_hyh_front.tiles/thumb.jpg" lat="" lng="" heading="">
+		<view hlookat="0.0" vlookat="20" fovtype="MFOV" fov="90"  fovmin="60" fovmax="100" limitview="auto" />
+		<preview url="panos/comfortline380_hyh_front.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/comfortline380_hyh_front.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,768,1664,3200" />
+		</image>	
+
+        <hotspot name="black_cubefront" style="cubeface" url="hotspot/front/black_cubefront.png" ath="0" atv="0" />
+        <hotspot name="black_cubeback" style="cubeface" url="hotspot/front/black_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="black_cubeleft" style="cubeface" url="hotspot/front/black_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="black_cuberight" style="cubeface" url="hotspot/front/black_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="black_cubetop" style="cubeface" url="hotspot/front/black_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="black_cubebottom" style="cubeface" url="hotspot/front/black_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="brown_cubefront" style="cubeface" url="hotspot/front/brown_cubefront.png" ath="0" atv="0" />
+        <hotspot name="brown_cubeback" style="cubeface" url="hotspot/front/brown_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="brown_cubeleft" style="cubeface" url="hotspot/front/brown_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="brown_cuberight" style="cubeface" url="hotspot/front/brown_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="brown_cubetop" style="cubeface" url="hotspot/front/brown_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="brown_cubebottom" style="cubeface" url="hotspot/front/brown_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="light_cubefront" style="cubeface" url="hotspot/front/light_cubefront.png" ath="0" atv="0" />
+        <hotspot name="light_cubeback" style="cubeface" url="hotspot/front/light_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="light_cubeleft" style="cubeface" url="hotspot/front/light_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="light_cuberight" style="cubeface" url="hotspot/front/light_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="light_cubetop" style="cubeface" url="hotspot/front/light_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="light_cubebottom" style="cubeface" url="hotspot/front/light_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="violet_cubefront" style="cubeface" url="hotspot/front/violet_cubefront.png" ath="0" atv="0" />
+        <hotspot name="violet_cubeback" style="cubeface" url="hotspot/front/violet_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="violet_cubeleft" style="cubeface" url="hotspot/front/violet_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="violet_cuberight" style="cubeface" url="hotspot/front/violet_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="violet_cubetop" style="cubeface" url="hotspot/front/violet_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="violet_cubebottom" style="cubeface" url="hotspot/front/violet_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="white_cubefront" style="cubeface" url="hotspot/front/white_cubefront.png" ath="0" atv="0" />
+        <hotspot name="white_cubeback" style="cubeface" url="hotspot/front/white_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="white_cubeleft" style="cubeface" url="hotspot/front/white_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="white_cuberight" style="cubeface" url="hotspot/front/white_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="white_cubetop" style="cubeface" url="hotspot/front/white_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="white_cubebottom" style="cubeface" url="hotspot/front/white_cubebottom.png" ath="0" atv="+90" />
+
+	</scene>
+    <!-- comfortline380_hyh_back 黑夜黑-->
+	<scene name="comfortline380_hyh_back" title="comfortline380_hyh_back" onstart="" thumburl="panos/comfortline380_hyh_back.tiles/thumb.jpg" lat="" lng="" heading="">
+		<view hlookat="0.0" vlookat="20" fovtype="MFOV" fov="90"  fovmin="60" fovmax="100" limitview="auto" />
+		<preview url="panos/comfortline380_hyh_back.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/comfortline380_hyh_back.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,768,1664,3200" />
+		</image>	
+
+        <hotspot name="black_cubefront" style="cubeface" url="hotspot/back/black_cubefront.png" ath="0" atv="0" />
+        <hotspot name="black_cubeback" style="cubeface" url="hotspot/back/black_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="black_cubeleft" style="cubeface" url="hotspot/back/black_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="black_cuberight" style="cubeface" url="hotspot/back/black_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="black_cubetop" style="cubeface" url="hotspot/back/black_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="black_cubebottom" style="cubeface" url="hotspot/back/black_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="brown_cubefront" style="cubeface" url="hotspot/back/brown_cubefront.png" ath="0" atv="0" />
+        <hotspot name="brown_cubeback" style="cubeface" url="hotspot/back/brown_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="brown_cubeleft" style="cubeface" url="hotspot/back/brown_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="brown_cuberight" style="cubeface" url="hotspot/back/brown_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="brown_cubetop" style="cubeface" url="hotspot/back/brown_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="brown_cubebottom" style="cubeface" url="hotspot/back/brown_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="light_cubefront" style="cubeface" url="hotspot/back/light_cubefront.png" ath="0" atv="0" />
+        <hotspot name="light_cubeback" style="cubeface" url="hotspot/back/light_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="light_cubeleft" style="cubeface" url="hotspot/back/light_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="light_cuberight" style="cubeface" url="hotspot/back/light_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="light_cubetop" style="cubeface" url="hotspot/back/light_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="light_cubebottom" style="cubeface" url="hotspot/back/light_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="violet_cubefront" style="cubeface" url="hotspot/back/violet_cubefront.png" ath="0" atv="0" />
+        <hotspot name="violet_cubeback" style="cubeface" url="hotspot/back/violet_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="violet_cubeleft" style="cubeface" url="hotspot/back/violet_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="violet_cuberight" style="cubeface" url="hotspot/back/violet_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="violet_cubetop" style="cubeface" url="hotspot/back/violet_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="violet_cubebottom" style="cubeface" url="hotspot/back/violet_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="white_cubefront" style="cubeface" url="hotspot/back/white_cubefront.png" ath="0" atv="0" />
+        <hotspot name="white_cubeback" style="cubeface" url="hotspot/back/white_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="white_cubeleft" style="cubeface" url="hotspot/back/white_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="white_cuberight" style="cubeface" url="hotspot/back/white_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="white_cubetop" style="cubeface" url="hotspot/back/white_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="white_cubebottom" style="cubeface" url="hotspot/back/white_cubebottom.png" ath="0" atv="+90" />
+
+	</scene>
+
+
+
+
+
+
+    <!-- trendline_yyh_front 云影黑-->
+	<scene name="trendline_yyh_front" title="trendline_yyh_front" onstart="" thumburl="panos/trendline_yyh_front.tiles/thumb.jpg" lat="" lng="" heading="">
+		<view hlookat="0.0" vlookat="20" fovtype="MFOV" fov="90"  fovmin="60" fovmax="100" limitview="auto" />
+		<preview url="panos/trendline_yyh_front.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/trendline_yyh_front.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,768,1664,3200" />
+		</image>	
+
+        <hotspot name="black_cubefront" style="cubeface" url="hotspot/front/black_cubefront.png" ath="0" atv="0" />
+        <hotspot name="black_cubeback" style="cubeface" url="hotspot/front/black_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="black_cubeleft" style="cubeface" url="hotspot/front/black_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="black_cuberight" style="cubeface" url="hotspot/front/black_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="black_cubetop" style="cubeface" url="hotspot/front/black_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="black_cubebottom" style="cubeface" url="hotspot/front/black_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="brown_cubefront" style="cubeface" url="hotspot/front/brown_cubefront.png" ath="0" atv="0" />
+        <hotspot name="brown_cubeback" style="cubeface" url="hotspot/front/brown_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="brown_cubeleft" style="cubeface" url="hotspot/front/brown_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="brown_cuberight" style="cubeface" url="hotspot/front/brown_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="brown_cubetop" style="cubeface" url="hotspot/front/brown_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="brown_cubebottom" style="cubeface" url="hotspot/front/brown_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="light_cubefront" style="cubeface" url="hotspot/front/light_cubefront.png" ath="0" atv="0" />
+        <hotspot name="light_cubeback" style="cubeface" url="hotspot/front/light_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="light_cubeleft" style="cubeface" url="hotspot/front/light_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="light_cuberight" style="cubeface" url="hotspot/front/light_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="light_cubetop" style="cubeface" url="hotspot/front/light_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="light_cubebottom" style="cubeface" url="hotspot/front/light_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="violet_cubefront" style="cubeface" url="hotspot/front/violet_cubefront.png" ath="0" atv="0" />
+        <hotspot name="violet_cubeback" style="cubeface" url="hotspot/front/violet_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="violet_cubeleft" style="cubeface" url="hotspot/front/violet_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="violet_cuberight" style="cubeface" url="hotspot/front/violet_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="violet_cubetop" style="cubeface" url="hotspot/front/violet_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="violet_cubebottom" style="cubeface" url="hotspot/front/violet_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="white_cubefront" style="cubeface" url="hotspot/front/white_cubefront.png" ath="0" atv="0" />
+        <hotspot name="white_cubeback" style="cubeface" url="hotspot/front/white_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="white_cubeleft" style="cubeface" url="hotspot/front/white_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="white_cuberight" style="cubeface" url="hotspot/front/white_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="white_cubetop" style="cubeface" url="hotspot/front/white_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="white_cubebottom" style="cubeface" url="hotspot/front/white_cubebottom.png" ath="0" atv="+90" />
+
+	</scene>
+    <!-- trendline_yyh_back 云影黑-->
+	<scene name="trendline_yyh_back" title="trendline_yyh_back" onstart="" thumburl="panos/trendline_yyh_back.tiles/thumb.jpg" lat="" lng="" heading="">
+		<view hlookat="0.0" vlookat="20" fovtype="MFOV" fov="90"  fovmin="60" fovmax="100" limitview="auto" />
+		<preview url="panos/trendline_yyh_back.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/trendline_yyh_back.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,768,1664,3200" />
+		</image>	
+
+        <hotspot name="black_cubefront" style="cubeface" url="hotspot/back/black_cubefront.png" ath="0" atv="0" />
+        <hotspot name="black_cubeback" style="cubeface" url="hotspot/back/black_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="black_cubeleft" style="cubeface" url="hotspot/back/black_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="black_cuberight" style="cubeface" url="hotspot/back/black_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="black_cubetop" style="cubeface" url="hotspot/back/black_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="black_cubebottom" style="cubeface" url="hotspot/back/black_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="brown_cubefront" style="cubeface" url="hotspot/back/brown_cubefront.png" ath="0" atv="0" />
+        <hotspot name="brown_cubeback" style="cubeface" url="hotspot/back/brown_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="brown_cubeleft" style="cubeface" url="hotspot/back/brown_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="brown_cuberight" style="cubeface" url="hotspot/back/brown_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="brown_cubetop" style="cubeface" url="hotspot/back/brown_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="brown_cubebottom" style="cubeface" url="hotspot/back/brown_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="light_cubefront" style="cubeface" url="hotspot/back/light_cubefront.png" ath="0" atv="0" />
+        <hotspot name="light_cubeback" style="cubeface" url="hotspot/back/light_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="light_cubeleft" style="cubeface" url="hotspot/back/light_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="light_cuberight" style="cubeface" url="hotspot/back/light_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="light_cubetop" style="cubeface" url="hotspot/back/light_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="light_cubebottom" style="cubeface" url="hotspot/back/light_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="violet_cubefront" style="cubeface" url="hotspot/back/violet_cubefront.png" ath="0" atv="0" />
+        <hotspot name="violet_cubeback" style="cubeface" url="hotspot/back/violet_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="violet_cubeleft" style="cubeface" url="hotspot/back/violet_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="violet_cuberight" style="cubeface" url="hotspot/back/violet_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="violet_cubetop" style="cubeface" url="hotspot/back/violet_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="violet_cubebottom" style="cubeface" url="hotspot/back/violet_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="white_cubefront" style="cubeface" url="hotspot/back/white_cubefront.png" ath="0" atv="0" />
+        <hotspot name="white_cubeback" style="cubeface" url="hotspot/back/white_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="white_cubeleft" style="cubeface" url="hotspot/back/white_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="white_cuberight" style="cubeface" url="hotspot/back/white_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="white_cubetop" style="cubeface" url="hotspot/back/white_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="white_cubebottom" style="cubeface" url="hotspot/back/white_cubebottom.png" ath="0" atv="+90" />
+
+	</scene>
+	
+    <!-- trendline_hyh_front 黑夜黑-->
+	<scene name="trendline_hyh_front" title="trendline_hyh_front" onstart="" thumburl="panos/trendline_hyh_front.tiles/thumb.jpg" lat="" lng="" heading="">
+		<view hlookat="0.0" vlookat="20" fovtype="MFOV" fov="90"  fovmin="60" fovmax="100" limitview="auto" />
+		<preview url="panos/trendline_hyh_front.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/trendline_hyh_front.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,768,1664,3200" />
+		</image>	
+
+        <hotspot name="black_cubefront" style="cubeface" url="hotspot/front/black_cubefront.png" ath="0" atv="0" />
+        <hotspot name="black_cubeback" style="cubeface" url="hotspot/front/black_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="black_cubeleft" style="cubeface" url="hotspot/front/black_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="black_cuberight" style="cubeface" url="hotspot/front/black_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="black_cubetop" style="cubeface" url="hotspot/front/black_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="black_cubebottom" style="cubeface" url="hotspot/front/black_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="brown_cubefront" style="cubeface" url="hotspot/front/brown_cubefront.png" ath="0" atv="0" />
+        <hotspot name="brown_cubeback" style="cubeface" url="hotspot/front/brown_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="brown_cubeleft" style="cubeface" url="hotspot/front/brown_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="brown_cuberight" style="cubeface" url="hotspot/front/brown_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="brown_cubetop" style="cubeface" url="hotspot/front/brown_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="brown_cubebottom" style="cubeface" url="hotspot/front/brown_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="light_cubefront" style="cubeface" url="hotspot/front/light_cubefront.png" ath="0" atv="0" />
+        <hotspot name="light_cubeback" style="cubeface" url="hotspot/front/light_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="light_cubeleft" style="cubeface" url="hotspot/front/light_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="light_cuberight" style="cubeface" url="hotspot/front/light_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="light_cubetop" style="cubeface" url="hotspot/front/light_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="light_cubebottom" style="cubeface" url="hotspot/front/light_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="violet_cubefront" style="cubeface" url="hotspot/front/violet_cubefront.png" ath="0" atv="0" />
+        <hotspot name="violet_cubeback" style="cubeface" url="hotspot/front/violet_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="violet_cubeleft" style="cubeface" url="hotspot/front/violet_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="violet_cuberight" style="cubeface" url="hotspot/front/violet_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="violet_cubetop" style="cubeface" url="hotspot/front/violet_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="violet_cubebottom" style="cubeface" url="hotspot/front/violet_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="white_cubefront" style="cubeface" url="hotspot/front/white_cubefront.png" ath="0" atv="0" />
+        <hotspot name="white_cubeback" style="cubeface" url="hotspot/front/white_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="white_cubeleft" style="cubeface" url="hotspot/front/white_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="white_cuberight" style="cubeface" url="hotspot/front/white_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="white_cubetop" style="cubeface" url="hotspot/front/white_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="white_cubebottom" style="cubeface" url="hotspot/front/white_cubebottom.png" ath="0" atv="+90" />
+
+	</scene>
+    <!-- trendline_hyh_back 黑夜黑-->
+	<scene name="trendline_hyh_back" title="trendline_hyh_back" onstart="" thumburl="panos/trendline_hyh_back.tiles/thumb.jpg" lat="" lng="" heading="">
+		<view hlookat="0.0" vlookat="20" fovtype="MFOV" fov="90"  fovmin="60" fovmax="100" limitview="auto" />
+		<preview url="panos/trendline_hyh_back.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/trendline_hyh_back.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,768,1664,3200" />
+		</image>	
+
+        <hotspot name="black_cubefront" style="cubeface" url="hotspot/back/black_cubefront.png" ath="0" atv="0" />
+        <hotspot name="black_cubeback" style="cubeface" url="hotspot/back/black_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="black_cubeleft" style="cubeface" url="hotspot/back/black_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="black_cuberight" style="cubeface" url="hotspot/back/black_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="black_cubetop" style="cubeface" url="hotspot/back/black_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="black_cubebottom" style="cubeface" url="hotspot/back/black_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="brown_cubefront" style="cubeface" url="hotspot/back/brown_cubefront.png" ath="0" atv="0" />
+        <hotspot name="brown_cubeback" style="cubeface" url="hotspot/back/brown_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="brown_cubeleft" style="cubeface" url="hotspot/back/brown_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="brown_cuberight" style="cubeface" url="hotspot/back/brown_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="brown_cubetop" style="cubeface" url="hotspot/back/brown_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="brown_cubebottom" style="cubeface" url="hotspot/back/brown_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="light_cubefront" style="cubeface" url="hotspot/back/light_cubefront.png" ath="0" atv="0" />
+        <hotspot name="light_cubeback" style="cubeface" url="hotspot/back/light_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="light_cubeleft" style="cubeface" url="hotspot/back/light_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="light_cuberight" style="cubeface" url="hotspot/back/light_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="light_cubetop" style="cubeface" url="hotspot/back/light_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="light_cubebottom" style="cubeface" url="hotspot/back/light_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="violet_cubefront" style="cubeface" url="hotspot/back/violet_cubefront.png" ath="0" atv="0" />
+        <hotspot name="violet_cubeback" style="cubeface" url="hotspot/back/violet_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="violet_cubeleft" style="cubeface" url="hotspot/back/violet_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="violet_cuberight" style="cubeface" url="hotspot/back/violet_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="violet_cubetop" style="cubeface" url="hotspot/back/violet_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="violet_cubebottom" style="cubeface" url="hotspot/back/violet_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="white_cubefront" style="cubeface" url="hotspot/back/white_cubefront.png" ath="0" atv="0" />
+        <hotspot name="white_cubeback" style="cubeface" url="hotspot/back/white_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="white_cubeleft" style="cubeface" url="hotspot/back/white_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="white_cuberight" style="cubeface" url="hotspot/back/white_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="white_cubetop" style="cubeface" url="hotspot/back/white_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="white_cubebottom" style="cubeface" url="hotspot/back/white_cubebottom.png" ath="0" atv="+90" />
+
+	</scene>
+
+
+
+    <!-- comfortline_qyl_front 浅云绿-->
+	<scene name="comfortline_qyl_front" title="comfortline_qyl_front" onstart="" thumburl="panos/comfortline_qyl_front.tiles/thumb.jpg" lat="" lng="" heading="">
+		<view hlookat="0.0" vlookat="20" fovtype="MFOV" fov="90"  fovmin="60" fovmax="100" limitview="auto" />
+		<preview url="panos/comfortline_qyl_front.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/comfortline_qyl_front.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,768,1664,3200" />
+		</image>	
+
+        <hotspot name="black_cubefront" style="cubeface" url="hotspot/front/black_cubefront.png" ath="0" atv="0" />
+        <hotspot name="black_cubeback" style="cubeface" url="hotspot/front/black_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="black_cubeleft" style="cubeface" url="hotspot/front/black_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="black_cuberight" style="cubeface" url="hotspot/front/black_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="black_cubetop" style="cubeface" url="hotspot/front/black_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="black_cubebottom" style="cubeface" url="hotspot/front/black_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="brown_cubefront" style="cubeface" url="hotspot/front/brown_cubefront.png" ath="0" atv="0" />
+        <hotspot name="brown_cubeback" style="cubeface" url="hotspot/front/brown_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="brown_cubeleft" style="cubeface" url="hotspot/front/brown_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="brown_cuberight" style="cubeface" url="hotspot/front/brown_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="brown_cubetop" style="cubeface" url="hotspot/front/brown_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="brown_cubebottom" style="cubeface" url="hotspot/front/brown_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="light_cubefront" style="cubeface" url="hotspot/front/light_cubefront.png" ath="0" atv="0" />
+        <hotspot name="light_cubeback" style="cubeface" url="hotspot/front/light_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="light_cubeleft" style="cubeface" url="hotspot/front/light_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="light_cuberight" style="cubeface" url="hotspot/front/light_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="light_cubetop" style="cubeface" url="hotspot/front/light_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="light_cubebottom" style="cubeface" url="hotspot/front/light_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="violet_cubefront" style="cubeface" url="hotspot/front/violet_cubefront.png" ath="0" atv="0" />
+        <hotspot name="violet_cubeback" style="cubeface" url="hotspot/front/violet_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="violet_cubeleft" style="cubeface" url="hotspot/front/violet_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="violet_cuberight" style="cubeface" url="hotspot/front/violet_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="violet_cubetop" style="cubeface" url="hotspot/front/violet_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="violet_cubebottom" style="cubeface" url="hotspot/front/violet_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="white_cubefront" style="cubeface" url="hotspot/front/white_cubefront.png" ath="0" atv="0" />
+        <hotspot name="white_cubeback" style="cubeface" url="hotspot/front/white_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="white_cubeleft" style="cubeface" url="hotspot/front/white_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="white_cuberight" style="cubeface" url="hotspot/front/white_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="white_cubetop" style="cubeface" url="hotspot/front/white_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="white_cubebottom" style="cubeface" url="hotspot/front/white_cubebottom.png" ath="0" atv="+90" />
+
+	</scene>
+    <!-- comfortline_qyl_back 浅云绿-->
+    <scene name="comfortline_qyl_back" title="comfortline_qyl_back" onstart="" thumburl="panos/comfortline_qyl_back.tiles/thumb.jpg" lat="" lng="" heading="">
+		<view hlookat="0.0" vlookat="20" fovtype="MFOV" fov="90"  fovmin="60" fovmax="100" limitview="auto" />
+		<preview url="panos/comfortline_qyl_back.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/comfortline_qyl_back.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,768,1664,3200" />
+		</image>	
+
+        <hotspot name="black_cubefront" style="cubeface" url="hotspot/back/black_cubefront.png" ath="0" atv="0" />
+        <hotspot name="black_cubeback" style="cubeface" url="hotspot/back/black_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="black_cubeleft" style="cubeface" url="hotspot/back/black_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="black_cuberight" style="cubeface" url="hotspot/back/black_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="black_cubetop" style="cubeface" url="hotspot/back/black_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="black_cubebottom" style="cubeface" url="hotspot/back/black_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="brown_cubefront" style="cubeface" url="hotspot/back/brown_cubefront.png" ath="0" atv="0" />
+        <hotspot name="brown_cubeback" style="cubeface" url="hotspot/back/brown_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="brown_cubeleft" style="cubeface" url="hotspot/back/brown_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="brown_cuberight" style="cubeface" url="hotspot/back/brown_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="brown_cubetop" style="cubeface" url="hotspot/back/brown_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="brown_cubebottom" style="cubeface" url="hotspot/back/brown_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="light_cubefront" style="cubeface" url="hotspot/back/light_cubefront.png" ath="0" atv="0" />
+        <hotspot name="light_cubeback" style="cubeface" url="hotspot/back/light_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="light_cubeleft" style="cubeface" url="hotspot/back/light_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="light_cuberight" style="cubeface" url="hotspot/back/light_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="light_cubetop" style="cubeface" url="hotspot/back/light_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="light_cubebottom" style="cubeface" url="hotspot/back/light_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="violet_cubefront" style="cubeface" url="hotspot/back/violet_cubefront.png" ath="0" atv="0" />
+        <hotspot name="violet_cubeback" style="cubeface" url="hotspot/back/violet_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="violet_cubeleft" style="cubeface" url="hotspot/back/violet_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="violet_cuberight" style="cubeface" url="hotspot/back/violet_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="violet_cubetop" style="cubeface" url="hotspot/back/violet_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="violet_cubebottom" style="cubeface" url="hotspot/back/violet_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="white_cubefront" style="cubeface" url="hotspot/back/white_cubefront.png" ath="0" atv="0" />
+        <hotspot name="white_cubeback" style="cubeface" url="hotspot/back/white_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="white_cubeleft" style="cubeface" url="hotspot/back/white_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="white_cuberight" style="cubeface" url="hotspot/back/white_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="white_cubetop" style="cubeface" url="hotspot/back/white_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="white_cubebottom" style="cubeface" url="hotspot/back/white_cubebottom.png" ath="0" atv="+90" />
+
+	</scene>
+
+    <!-- comfortline_yhb_front 云海白-->
+	<scene name="comfortline_yhb_front" title="comfortline_yhb_front" onstart="" thumburl="panos/comfortline_yhb_front.tiles/thumb.jpg" lat="" lng="" heading="">
+		<view hlookat="0.0" vlookat="20" fovtype="MFOV" fov="90"  fovmin="60" fovmax="100" limitview="auto" />
+		<preview url="panos/comfortline_yhb_front.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/comfortline_yhb_front.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,768,1664,3200" />
+		</image>	
+
+        <hotspot name="black_cubefront" style="cubeface" url="hotspot/front/black_cubefront.png" ath="0" atv="0" />
+        <hotspot name="black_cubeback" style="cubeface" url="hotspot/front/black_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="black_cubeleft" style="cubeface" url="hotspot/front/black_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="black_cuberight" style="cubeface" url="hotspot/front/black_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="black_cubetop" style="cubeface" url="hotspot/front/black_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="black_cubebottom" style="cubeface" url="hotspot/front/black_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="brown_cubefront" style="cubeface" url="hotspot/front/brown_cubefront.png" ath="0" atv="0" />
+        <hotspot name="brown_cubeback" style="cubeface" url="hotspot/front/brown_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="brown_cubeleft" style="cubeface" url="hotspot/front/brown_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="brown_cuberight" style="cubeface" url="hotspot/front/brown_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="brown_cubetop" style="cubeface" url="hotspot/front/brown_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="brown_cubebottom" style="cubeface" url="hotspot/front/brown_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="light_cubefront" style="cubeface" url="hotspot/front/light_cubefront.png" ath="0" atv="0" />
+        <hotspot name="light_cubeback" style="cubeface" url="hotspot/front/light_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="light_cubeleft" style="cubeface" url="hotspot/front/light_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="light_cuberight" style="cubeface" url="hotspot/front/light_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="light_cubetop" style="cubeface" url="hotspot/front/light_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="light_cubebottom" style="cubeface" url="hotspot/front/light_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="violet_cubefront" style="cubeface" url="hotspot/front/violet_cubefront.png" ath="0" atv="0" />
+        <hotspot name="violet_cubeback" style="cubeface" url="hotspot/front/violet_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="violet_cubeleft" style="cubeface" url="hotspot/front/violet_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="violet_cuberight" style="cubeface" url="hotspot/front/violet_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="violet_cubetop" style="cubeface" url="hotspot/front/violet_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="violet_cubebottom" style="cubeface" url="hotspot/front/violet_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="white_cubefront" style="cubeface" url="hotspot/front/white_cubefront.png" ath="0" atv="0" />
+        <hotspot name="white_cubeback" style="cubeface" url="hotspot/front/white_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="white_cubeleft" style="cubeface" url="hotspot/front/white_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="white_cuberight" style="cubeface" url="hotspot/front/white_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="white_cubetop" style="cubeface" url="hotspot/front/white_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="white_cubebottom" style="cubeface" url="hotspot/front/white_cubebottom.png" ath="0" atv="+90" />
+
+	</scene>
+    <!-- comfortline_yhb_back 云海白-->
+	<scene name="comfortline_yhb_back" title="comfortline_yhb_back" onstart="" thumburl="panos/comfortline_yhb_back.tiles/thumb.jpg" lat="" lng="" heading="">
+		<view hlookat="0.0" vlookat="20" fovtype="MFOV" fov="90"  fovmin="60" fovmax="100" limitview="auto" />
+		<preview url="panos/comfortline_yhb_back.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/comfortline_yhb_back.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,768,1664,3200" />
+		</image>	
+
+        <hotspot name="black_cubefront" style="cubeface" url="hotspot/back/black_cubefront.png" ath="0" atv="0" />
+        <hotspot name="black_cubeback" style="cubeface" url="hotspot/back/black_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="black_cubeleft" style="cubeface" url="hotspot/back/black_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="black_cuberight" style="cubeface" url="hotspot/back/black_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="black_cubetop" style="cubeface" url="hotspot/back/black_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="black_cubebottom" style="cubeface" url="hotspot/back/black_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="brown_cubefront" style="cubeface" url="hotspot/back/brown_cubefront.png" ath="0" atv="0" />
+        <hotspot name="brown_cubeback" style="cubeface" url="hotspot/back/brown_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="brown_cubeleft" style="cubeface" url="hotspot/back/brown_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="brown_cuberight" style="cubeface" url="hotspot/back/brown_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="brown_cubetop" style="cubeface" url="hotspot/back/brown_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="brown_cubebottom" style="cubeface" url="hotspot/back/brown_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="light_cubefront" style="cubeface" url="hotspot/back/light_cubefront.png" ath="0" atv="0" />
+        <hotspot name="light_cubeback" style="cubeface" url="hotspot/back/light_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="light_cubeleft" style="cubeface" url="hotspot/back/light_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="light_cuberight" style="cubeface" url="hotspot/back/light_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="light_cubetop" style="cubeface" url="hotspot/back/light_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="light_cubebottom" style="cubeface" url="hotspot/back/light_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="violet_cubefront" style="cubeface" url="hotspot/back/violet_cubefront.png" ath="0" atv="0" />
+        <hotspot name="violet_cubeback" style="cubeface" url="hotspot/back/violet_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="violet_cubeleft" style="cubeface" url="hotspot/back/violet_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="violet_cuberight" style="cubeface" url="hotspot/back/violet_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="violet_cubetop" style="cubeface" url="hotspot/back/violet_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="violet_cubebottom" style="cubeface" url="hotspot/back/violet_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="white_cubefront" style="cubeface" url="hotspot/back/white_cubefront.png" ath="0" atv="0" />
+        <hotspot name="white_cubeback" style="cubeface" url="hotspot/back/white_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="white_cubeleft" style="cubeface" url="hotspot/back/white_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="white_cuberight" style="cubeface" url="hotspot/back/white_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="white_cubetop" style="cubeface" url="hotspot/back/white_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="white_cubebottom" style="cubeface" url="hotspot/back/white_cubebottom.png" ath="0" atv="+90" />
+
+	</scene>
+
+    <!-- comfortline_hyh_front 黑夜黑-->
+	<scene name="comfortline_hyh_front" title="comfortline_hyh_front" onstart="" thumburl="panos/comfortline_hyh_front.tiles/thumb.jpg" lat="" lng="" heading="">
+		<view hlookat="0.0" vlookat="20" fovtype="MFOV" fov="90"  fovmin="60" fovmax="100" limitview="auto" />
+		<preview url="panos/comfortline_hyh_front.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/comfortline_hyh_front.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,768,1664,3200" />
+		</image>	
+
+        <hotspot name="black_cubefront" style="cubeface" url="hotspot/front/black_cubefront.png" ath="0" atv="0" />
+        <hotspot name="black_cubeback" style="cubeface" url="hotspot/front/black_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="black_cubeleft" style="cubeface" url="hotspot/front/black_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="black_cuberight" style="cubeface" url="hotspot/front/black_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="black_cubetop" style="cubeface" url="hotspot/front/black_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="black_cubebottom" style="cubeface" url="hotspot/front/black_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="brown_cubefront" style="cubeface" url="hotspot/front/brown_cubefront.png" ath="0" atv="0" />
+        <hotspot name="brown_cubeback" style="cubeface" url="hotspot/front/brown_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="brown_cubeleft" style="cubeface" url="hotspot/front/brown_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="brown_cuberight" style="cubeface" url="hotspot/front/brown_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="brown_cubetop" style="cubeface" url="hotspot/front/brown_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="brown_cubebottom" style="cubeface" url="hotspot/front/brown_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="light_cubefront" style="cubeface" url="hotspot/front/light_cubefront.png" ath="0" atv="0" />
+        <hotspot name="light_cubeback" style="cubeface" url="hotspot/front/light_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="light_cubeleft" style="cubeface" url="hotspot/front/light_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="light_cuberight" style="cubeface" url="hotspot/front/light_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="light_cubetop" style="cubeface" url="hotspot/front/light_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="light_cubebottom" style="cubeface" url="hotspot/front/light_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="violet_cubefront" style="cubeface" url="hotspot/front/violet_cubefront.png" ath="0" atv="0" />
+        <hotspot name="violet_cubeback" style="cubeface" url="hotspot/front/violet_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="violet_cubeleft" style="cubeface" url="hotspot/front/violet_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="violet_cuberight" style="cubeface" url="hotspot/front/violet_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="violet_cubetop" style="cubeface" url="hotspot/front/violet_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="violet_cubebottom" style="cubeface" url="hotspot/front/violet_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="white_cubefront" style="cubeface" url="hotspot/front/white_cubefront.png" ath="0" atv="0" />
+        <hotspot name="white_cubeback" style="cubeface" url="hotspot/front/white_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="white_cubeleft" style="cubeface" url="hotspot/front/white_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="white_cuberight" style="cubeface" url="hotspot/front/white_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="white_cubetop" style="cubeface" url="hotspot/front/white_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="white_cubebottom" style="cubeface" url="hotspot/front/white_cubebottom.png" ath="0" atv="+90" />
+
+	</scene>
+    <!-- comfortline_hyh_back 黑夜黑-->
+	<scene name="comfortline_hyh_back" title="comfortline_hyh_back" onstart="" thumburl="panos/comfortline_hyh_back.tiles/thumb.jpg" lat="" lng="" heading="">
+		<view hlookat="0.0" vlookat="20" fovtype="MFOV" fov="90"  fovmin="60" fovmax="100" limitview="auto" />
+		<preview url="panos/comfortline_hyh_back.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/comfortline_hyh_back.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,768,1664,3200" />
+		</image>	
+
+        <hotspot name="black_cubefront" style="cubeface" url="hotspot/back/black_cubefront.png" ath="0" atv="0" />
+        <hotspot name="black_cubeback" style="cubeface" url="hotspot/back/black_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="black_cubeleft" style="cubeface" url="hotspot/back/black_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="black_cuberight" style="cubeface" url="hotspot/back/black_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="black_cubetop" style="cubeface" url="hotspot/back/black_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="black_cubebottom" style="cubeface" url="hotspot/back/black_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="brown_cubefront" style="cubeface" url="hotspot/back/brown_cubefront.png" ath="0" atv="0" />
+        <hotspot name="brown_cubeback" style="cubeface" url="hotspot/back/brown_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="brown_cubeleft" style="cubeface" url="hotspot/back/brown_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="brown_cuberight" style="cubeface" url="hotspot/back/brown_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="brown_cubetop" style="cubeface" url="hotspot/back/brown_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="brown_cubebottom" style="cubeface" url="hotspot/back/brown_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="light_cubefront" style="cubeface" url="hotspot/back/light_cubefront.png" ath="0" atv="0" />
+        <hotspot name="light_cubeback" style="cubeface" url="hotspot/back/light_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="light_cubeleft" style="cubeface" url="hotspot/back/light_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="light_cuberight" style="cubeface" url="hotspot/back/light_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="light_cubetop" style="cubeface" url="hotspot/back/light_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="light_cubebottom" style="cubeface" url="hotspot/back/light_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="violet_cubefront" style="cubeface" url="hotspot/back/violet_cubefront.png" ath="0" atv="0" />
+        <hotspot name="violet_cubeback" style="cubeface" url="hotspot/back/violet_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="violet_cubeleft" style="cubeface" url="hotspot/back/violet_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="violet_cuberight" style="cubeface" url="hotspot/back/violet_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="violet_cubetop" style="cubeface" url="hotspot/back/violet_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="violet_cubebottom" style="cubeface" url="hotspot/back/violet_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="white_cubefront" style="cubeface" url="hotspot/back/white_cubefront.png" ath="0" atv="0" />
+        <hotspot name="white_cubeback" style="cubeface" url="hotspot/back/white_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="white_cubeleft" style="cubeface" url="hotspot/back/white_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="white_cuberight" style="cubeface" url="hotspot/back/white_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="white_cubetop" style="cubeface" url="hotspot/back/white_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="white_cubebottom" style="cubeface" url="hotspot/back/white_cubebottom.png" ath="0" atv="+90" />
+
+	</scene>
+
+    <!-- rline_xyh_front 星耀黑-->
+	<scene name="rline_xyh_front" title="rline_xyh_front" onstart="" thumburl="panos/rline_xyh_front.tiles/thumb.jpg" lat="" lng="" heading="">
+		<view hlookat="0.0" vlookat="20" fovtype="MFOV" fov="90"  fovmin="60" fovmax="100" limitview="auto" />
+		<preview url="panos/rline_xyh_front.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/rline_xyh_front.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,768,1664,3200" />
+		</image>	
+
+        <hotspot name="black_cubefront" style="cubeface" url="hotspot/front/black_cubefront.png" ath="0" atv="0" />
+        <hotspot name="black_cubeback" style="cubeface" url="hotspot/front/black_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="black_cubeleft" style="cubeface" url="hotspot/front/black_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="black_cuberight" style="cubeface" url="hotspot/front/black_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="black_cubetop" style="cubeface" url="hotspot/front/black_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="black_cubebottom" style="cubeface" url="hotspot/front/black_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="brown_cubefront" style="cubeface" url="hotspot/front/brown_cubefront.png" ath="0" atv="0" />
+        <hotspot name="brown_cubeback" style="cubeface" url="hotspot/front/brown_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="brown_cubeleft" style="cubeface" url="hotspot/front/brown_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="brown_cuberight" style="cubeface" url="hotspot/front/brown_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="brown_cubetop" style="cubeface" url="hotspot/front/brown_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="brown_cubebottom" style="cubeface" url="hotspot/front/brown_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="light_cubefront" style="cubeface" url="hotspot/front/light_cubefront.png" ath="0" atv="0" />
+        <hotspot name="light_cubeback" style="cubeface" url="hotspot/front/light_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="light_cubeleft" style="cubeface" url="hotspot/front/light_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="light_cuberight" style="cubeface" url="hotspot/front/light_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="light_cubetop" style="cubeface" url="hotspot/front/light_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="light_cubebottom" style="cubeface" url="hotspot/front/light_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="violet_cubefront" style="cubeface" url="hotspot/front/violet_cubefront.png" ath="0" atv="0" />
+        <hotspot name="violet_cubeback" style="cubeface" url="hotspot/front/violet_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="violet_cubeleft" style="cubeface" url="hotspot/front/violet_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="violet_cuberight" style="cubeface" url="hotspot/front/violet_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="violet_cubetop" style="cubeface" url="hotspot/front/violet_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="violet_cubebottom" style="cubeface" url="hotspot/front/violet_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="white_cubefront" style="cubeface" url="hotspot/front/white_cubefront.png" ath="0" atv="0" />
+        <hotspot name="white_cubeback" style="cubeface" url="hotspot/front/white_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="white_cubeleft" style="cubeface" url="hotspot/front/white_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="white_cuberight" style="cubeface" url="hotspot/front/white_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="white_cubetop" style="cubeface" url="hotspot/front/white_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="white_cubebottom" style="cubeface" url="hotspot/front/white_cubebottom.png" ath="0" atv="+90" />
+
+	</scene>
+    <!-- rline_xyh_back 星耀黑-->
+    <scene name="rline_xyh_back" title="rline_xyh_back" onstart="" thumburl="panos/rline_xyh_back.tiles/thumb.jpg" lat="" lng="" heading="">
+		<view hlookat="0.0" vlookat="20" fovtype="MFOV" fov="90"  fovmin="60" fovmax="100" limitview="auto" />
+		<preview url="panos/rline_xyh_back.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/rline_xyh_back.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,768,1664,3200" />
+		</image>	
+
+        <hotspot name="black_cubefront" style="cubeface" url="hotspot/back/black_cubefront.png" ath="0" atv="0" />
+        <hotspot name="black_cubeback" style="cubeface" url="hotspot/back/black_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="black_cubeleft" style="cubeface" url="hotspot/back/black_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="black_cuberight" style="cubeface" url="hotspot/back/black_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="black_cubetop" style="cubeface" url="hotspot/back/black_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="black_cubebottom" style="cubeface" url="hotspot/back/black_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="brown_cubefront" style="cubeface" url="hotspot/back/brown_cubefront.png" ath="0" atv="0" />
+        <hotspot name="brown_cubeback" style="cubeface" url="hotspot/back/brown_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="brown_cubeleft" style="cubeface" url="hotspot/back/brown_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="brown_cuberight" style="cubeface" url="hotspot/back/brown_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="brown_cubetop" style="cubeface" url="hotspot/back/brown_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="brown_cubebottom" style="cubeface" url="hotspot/back/brown_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="light_cubefront" style="cubeface" url="hotspot/back/light_cubefront.png" ath="0" atv="0" />
+        <hotspot name="light_cubeback" style="cubeface" url="hotspot/back/light_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="light_cubeleft" style="cubeface" url="hotspot/back/light_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="light_cuberight" style="cubeface" url="hotspot/back/light_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="light_cubetop" style="cubeface" url="hotspot/back/light_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="light_cubebottom" style="cubeface" url="hotspot/back/light_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="violet_cubefront" style="cubeface" url="hotspot/back/violet_cubefront.png" ath="0" atv="0" />
+        <hotspot name="violet_cubeback" style="cubeface" url="hotspot/back/violet_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="violet_cubeleft" style="cubeface" url="hotspot/back/violet_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="violet_cuberight" style="cubeface" url="hotspot/back/violet_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="violet_cubetop" style="cubeface" url="hotspot/back/violet_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="violet_cubebottom" style="cubeface" url="hotspot/back/violet_cubebottom.png" ath="0" atv="+90" />
+
+        <hotspot name="white_cubefront" style="cubeface" url="hotspot/back/white_cubefront.png" ath="0" atv="0" />
+        <hotspot name="white_cubeback" style="cubeface" url="hotspot/back/white_cubeback.png" ath="+180" atv="0" />
+        <hotspot name="white_cubeleft" style="cubeface" url="hotspot/back/white_cubeleft.png" ath="-90" atv="0" />
+        <hotspot name="white_cuberight" style="cubeface" url="hotspot/back/white_cuberight.png" ath="+90" atv="0" />
+        <hotspot name="white_cubetop" style="cubeface" url="hotspot/back/white_cubetop.png" ath="0" atv="-90" />
+        <hotspot name="white_cubebottom" style="cubeface" url="hotspot/back/white_cubebottom.png" ath="0" atv="+90" />
+
+	</scene>
+
+</krpano>

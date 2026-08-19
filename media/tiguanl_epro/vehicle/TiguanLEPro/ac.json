@@ -1,0 +1,45 @@
+{
+    "metadata": {
+        "version": 1,
+        "type": "ActionMap",
+        "generator": "ActionManager.exportJson"
+    },
+    "list": [
+        {
+            "group": "ext",
+            "code": "doorFL",
+            "visible": false,
+            "description": "主驾车门",
+            "object": "60C0F535-798E-4F50-9634-BF70916078F7",
+            "component": "DoorControllerGroup",
+            "fun": "takeAction",
+            "arg": "doorFL"
+        },
+        {
+            "group": "ext",
+            "code": "door4",
+            "visible": true,
+            "description": "4扇车门开关",
+            "object": "60C0F535-798E-4F50-9634-BF70916078F7",
+            "component": "DoorControllerGroup",
+            "fun": "takeAction",
+            "arg": "door4"
+        },
+        {
+            "group": "ext",
+            "code": "doorTrunk",
+            "visible": true,
+            "description": "后尾门",
+            "object": "60C0F535-798E-4F50-9634-BF70916078F7",
+            "component": "DoorControllerGroup",
+            "fun": "takeAction",
+            "arg": "doorTrunk"
+        },
+        {
+            "group": "ext",
+            "code": "toHub",
+            "description": "轮毂视角",
+            "camera": "0DD5DE02-B8D3-4829-8BDC-C90E759D7C9C"
+        }
+    ]
+}

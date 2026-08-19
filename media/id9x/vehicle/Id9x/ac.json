@@ -1,0 +1,85 @@
+{
+    "metadata": {
+        "version": 1,
+        "type": "ActionMap",
+        "generator": "ActionManager.exportJson"
+    },
+    "list": [
+        {
+            "group": "ext",
+            "code": "doorFL",
+            "visible": true,
+            "description": "主驾驶车门开关",
+            "object": "891D3189-0A4D-4DD1-964B-887B4CF77854",
+            "component": "Anim_IDEra9X",
+            "fun": "takeAction",
+            "arg": "doorFL"
+        },
+        {
+            "group": "ext",
+            "code": "doorFR",
+            "visible": true,
+            "description": "副驾驶车门开关",
+            "object": "891D3189-0A4D-4DD1-964B-887B4CF77854",
+            "component": "Anim_IDEra9X",
+            "fun": "takeAction",
+            "arg": "doorFR"
+        },
+        {
+            "group": "ext",
+            "code": "doorRL",
+            "visible": true,
+            "description": "左后车门开关",
+            "object": "891D3189-0A4D-4DD1-964B-887B4CF77854",
+            "component": "Anim_IDEra9X",
+            "fun": "takeAction",
+            "arg": "doorRL"
+        },
+        {
+            "group": "ext",
+            "code": "doorRR",
+            "visible": true,
+            "description": "右后车门开关",
+            "object": "891D3189-0A4D-4DD1-964B-887B4CF77854",
+            "component": "Anim_IDEra9X",
+            "fun": "takeAction",
+            "arg": "doorRR"
+        },
+        {
+            "group": "ext",
+            "code": "door4",
+            "visible": true,
+            "description": "4扇车门开关",
+            "object": "891D3189-0A4D-4DD1-964B-887B4CF77854",
+            "component": "Anim_IDEra9X",
+            "fun": "takeAction",
+            "arg": "door4"
+        },
+        {
+            "group": "ext",
+            "code": "doorTrunk",
+            "visible": true,
+            "description": "后尾门",
+            "object": "891D3189-0A4D-4DD1-964B-887B4CF77854",
+            "component": "Anim_IDEra9X",
+            "fun": "takeAction",
+            "arg": "doorTrunk"
+        },
+        {
+            "group": "ext",
+            "code": "toHub",
+            "description": "轮毂视角",
+            "camera": "0DD5DE02-B8D3-4829-8BDC-C90E759D7C9C"
+        },
+        {
+            "group": "ext",
+            "code": "leaveHub",
+            "description": "尾门视角",
+            "camera": {
+                "yaw": 70,
+                "pitch": -10,
+                "distance": 6
+            }
+        }
+    ]
+}

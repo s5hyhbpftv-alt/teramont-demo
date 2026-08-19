@@ -1,0 +1,10 @@
+{
+  "load": {
+    "type": "exhibit",
+    "object": "model.json",
+    "drl": "model.drl",
+    "switchCfg": "sw.json",
+    "actionCfg": "ac.json",
+    "env": "./textures/hdr.hdr"
+  }
+}

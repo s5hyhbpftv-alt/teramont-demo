@@ -1,0 +1,399 @@
+﻿<krpano title="Virtual Tour" showlog="false" logkey="false" showerrors="false" onstart="startup">
+
+	<action name="startup" autorun="onstart">
+		set("autorotate.enabled",false);
+		set(org_vlookat,0);
+		set(org_hlookat,0);
+		set(count,0);
+		if(startscene === null OR !scene[get(startscene)], copy(startscene,scene[0].name); );
+		loadscene(get(startscene), null, MERGE);
+		if(startactions !== null, startactions() );
+	</action>
+
+	<action name="calcHotspotPos">
+		div(hfov,%1,57.295779);
+		div(yaw,%2,-57.295779);
+		div(pitch,%3,57.295779);
+		div(roll,%4,-57.295779);
+		mul(hfov,0.5);Math.tan(hfov);mul(width,hfov,1000);set(height,'prop');
+		Math.cos(ch,yaw);Math.sin(sh,yaw);
+		Math.cos(ca,pitch);Math.sin(sa,pitch);
+		Math.cos(cb,roll);Math.sin(sb,roll);
+		mul(m0,ca,ch);
+		mul(tmp,cb,sa);mul(tmp,ch);mul(tmp2,sb,sh);add(m3,tmp,tmp2);
+		mul(m4,cb,ca);
+		mul(tmp,cb,sa);mul(tmp,sh);mul(tmp2,sb,ch);sub(m5n,tmp,tmp2);mul(m5n,-1);
+		mul(tmp,sb,sa);mul(tmp,ch);mul(tmp2,cb,sh);sub(m6n,tmp,tmp2);mul(m6n,-1);
+		Math.atan2(yaw,m6n,m0);
+		Math.atan2(roll,m5n,m4);
+		Math.asin(pitch,m3);
+		mul(ath,yaw,57.295779);
+		mul(atv,pitch,57.295779);
+		mul(rotate,roll,57.295779);
+	</action>
+
+	<!-- hotspot[op_%1].addevent("onloaded", "delayedcall(0.1,set(hotspot[thumb_%1].visible,false);set(hotspot[op_%1].alpha,1););"); -->
+	<action name="setOptionHotspotVisible">
+		if(hotspot[op_%1] !== null AND hotspot[thumb_%1] !== null,
+		if(%2,
+		if(hotspot[op_%1].loaded,
+		set(hotspot[op_%1].visible,true);
+		set(hotspot[thumb_%1].visible,false);
+		,
+		set(hotspot[thumb_%1].visible,true);
+		set(hotspot[thumb_%1].alpha,1);
+		set(hotspot[op_%1].visible,true);
+		set(hotspot[op_%1].alpha,0);
+		hotspot[op_%1].addevent("onloaded", "delayVisible(%1);");
+		);
+		,
+		set(hotspot[op_%1].visible,false);
+		set(hotspot[thumb_%1].visible,false);
+		);
+		,
+		set(hotspot[op_%1].visible,%2);
+		if(hotspot[op_%1_p1] !== null, set(hotspot[op_%1_p1].visible,%2););
+		if(hotspot[op_%1_p2] !== null, set(hotspot[op_%1_p2].visible,%2););
+		);
+	</action>
+
+	<!-- 防止显示的时候跳一下 -->
+	<action name="delayVisible">
+		set(hotspot[op_%1].visible,true);
+		set(hotspot[op_%1].alpha,0);
+		set(hotspot[fix_%1].visible,true);
+		set(hotspot[fix_%1].alpha,0);
+		delayedcall(0.1,
+		set(hotspot[thumb_%1].visible,false);
+		set(hotspot[op_%1].alpha,1);
+		set(hotspot[fix_%1].alpha,1);
+		);
+	</action>
+
+	<style name="hot_vis" distorted="true" enabled="false" visible="true" alpha="1.0" />
+	<style name="hot_dis" distorted="true" enabled="false" visible="false" alpha="1.0" />
+
+
+	<!-- L1_墨•宝 -->
+	<scene name="l1_4wd_is_front" title="L1_4WD_IS_Front" onstart="" thumburl="panos/front/L1_4WD_IS.tiles/thumb.jpg" lat="" lng="" alt="" heading="">
+
+		<view hlookat="0.0" vlookat="15.0" fovtype="SFOV" fov="110" fovmin="80" fovmax="120" limitview="auto" />
+		<preview url="panos/front/L1_4WD_IS.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/front/L1_4WD_IS.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,640,1280,2560" />
+		</image>
+
+		<hotspot name="fix_rm" style="hot_vis" url="hotspot/front/RM.png" onloaded="calcHotspotPos(18, -31.8, -7, 3.8);" />
+		<hotspot name="thumb_seat_def" style="hot_dis" url="hotspot/front/thumb_Seat_Def_IS.png" onloaded="calcHotspotPos(90, -180, 57, -180);" />
+		<hotspot name="thumb_seat_pl4" style="hot_dis" url="hotspot/front/thumb_Seat_PL4_IS.png" onloaded="calcHotspotPos(90, -180, 57, -180);" />
+		<hotspot name="op_seat_def" style="hot_dis" url="hotspot/front/Seat_Def_IS.png" onloaded="calcHotspotPos(90, -180, 57, -180);" />
+		<hotspot name="op_seat_pl4" style="hot_dis" url="hotspot/front/Seat_PL4_IS.png" onloaded="calcHotspotPos(90, -180, 57, -180);" />
+
+		<hotspot enabled="false" visible="false" name="thumb_hp_01" url="hotspot/front/thumb_Seat_Def_IS.png" />
+		<hotspot enabled="false" visible="false" name="thumb_hp_01" url="hotspot/front/thumb_Seat_Def_BW.png" />
+		<hotspot enabled="false" visible="false" name="thumb_hp_03" url="hotspot/front/thumb_Seat_Def_AS.png" />
+		<hotspot enabled="false" visible="false" name="thumb_hp_02" url="hotspot/front/thumb_Seat_PL4_IS.png" />
+		<hotspot enabled="false" visible="false" name="thumb_hp_02" url="hotspot/front/thumb_Seat_PL4_BW.png" />
+		<hotspot enabled="false" visible="false" name="thumb_hp_04" url="hotspot/front/thumb_Seat_PL4_AS.png" />
+		<hotspot enabled="false" visible="false" name="thumb_hp_05" url="hotspot/behind/thumb_Seat_Def_IS.png" />
+		<hotspot enabled="false" visible="false" name="thumb_hp_07" url="hotspot/behind/thumb_Seat_Def_BW.png" />
+		<hotspot enabled="false" visible="false" name="thumb_hp_09" url="hotspot/behind/thumb_Seat_Def_AS.png" />
+		<hotspot enabled="false" visible="false" name="thumb_hp_06" url="hotspot/behind/thumb_Seat_PL4_IS.png" />
+		<hotspot enabled="false" visible="false" name="thumb_hp_08" url="hotspot/behind/thumb_Seat_PL4_BW.png" />
+		<hotspot enabled="false" visible="false" name="thumb_hp_10" url="hotspot/behind/thumb_Seat_PL4_AS.png" />
+
+	</scene>
+
+	<scene name="l1_4wd_is_behind" title="L1_4WD_IS_Behind" onstart="" thumburl="panos/behind/L1_4WD_IS.tiles/thumb.jpg" lat="" lng="" alt="" heading="">
+
+		<view hlookat="0.0" vlookat="10.0" fovtype="SFOV" fov="110" fovmin="80" fovmax="120" limitview="auto" />
+		<preview url="panos/behind/L1_4WD_IS.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/behind/L1_4WD_IS.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,640,1280,2560" />
+		</image>
+
+		<hotspot name="fix_rm" style="hot_vis" url="hotspot/behind/RM.png" onloaded="calcHotspotPos(15, 0, -1.3, 0);" />
+		<hotspot name="thumb_seat_def" style="hot_dis" url="hotspot/behind/thumb_Seat_Def_IS.png" onloaded="calcHotspotPos(65, 46, 33, 15.5);" />
+		<hotspot name="thumb_seat_pl4" style="hot_dis" url="hotspot/behind/thumb_Seat_PL4_IS.png" onloaded="calcHotspotPos(65, 46, 33, 15.5);" />
+		<hotspot name="op_seat_def" style="hot_dis" url="hotspot/behind/Seat_Def_IS.png" onloaded="calcHotspotPos(65, 46, 33, 15.5);" />
+		<hotspot name="op_seat_pl4" style="hot_dis" url="hotspot/behind/Seat_PL4_IS.png" onloaded="calcHotspotPos(65, 46, 33, 15.5);" />
+
+	</scene>
+
+	<!-- L1_本•色 -->
+	<scene name="l1_4wd_bw_front" title="L1_4WD_BW_Front" onstart="" thumburl="panos/front/L1_4WD_BW.tiles/thumb.jpg" lat="" lng="" alt="" heading="">
+
+		<view hlookat="0.0" vlookat="15.0" fovtype="SFOV" fov="110" fovmin="80" fovmax="120" limitview="auto" />
+		<preview url="panos/front/L1_4WD_BW.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/front/L1_4WD_BW.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,640,1280,2560" />
+		</image>
+
+		<hotspot name="fix_rm" style="hot_vis" url="hotspot/front/RM.png" onloaded="calcHotspotPos(18, -31.8, -7, 3.8);" />
+		<hotspot name="thumb_seat_def" style="hot_dis" url="hotspot/front/thumb_Seat_Def_BW.png" onloaded="calcHotspotPos(90, -180, 57, -180);" />
+		<hotspot name="thumb_seat_pl4" style="hot_dis" url="hotspot/front/thumb_Seat_PL4_BW.png" onloaded="calcHotspotPos(90, -180, 57, -180);" />
+		<hotspot name="op_seat_def" style="hot_dis" url="hotspot/front/Seat_Def_BW.png" onloaded="calcHotspotPos(90, -180, 57, -180);" />
+		<hotspot name="op_seat_pl4" style="hot_dis" url="hotspot/front/Seat_PL4_BW.png" onloaded="calcHotspotPos(90, -180, 57, -180);" />
+
+	</scene>
+
+	<scene name="l1_4wd_bw_behind" title="L1_4WD_BW_Behind" onstart="" thumburl="panos/behind/L1_4WD_BW.tiles/thumb.jpg" lat="" lng="" alt="" heading="">
+
+		<view hlookat="0.0" vlookat="10.0" fovtype="SFOV" fov="110" fovmin="80" fovmax="120" limitview="auto" />
+		<preview url="panos/behind/L1_4WD_BW.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/behind/L1_4WD_BW.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,640,1280,2560" />
+		</image>
+
+		<hotspot name="fix_rm" style="hot_vis" url="hotspot/behind/RM.png" onloaded="calcHotspotPos(15, 0, -1.3, 0);" />
+		<hotspot name="thumb_seat_def" style="hot_dis" url="hotspot/behind/thumb_Seat_Def_BW.png" onloaded="calcHotspotPos(65, 46, 33, 15.5);" />
+		<hotspot name="thumb_seat_pl4" style="hot_dis" url="hotspot/behind/thumb_Seat_PL4_BW.png" onloaded="calcHotspotPos(65, 46, 33, 15.5);" />
+		<hotspot name="op_seat_def" style="hot_dis" url="hotspot/behind/Seat_Def_BW.png" onloaded="calcHotspotPos(65, 46, 33, 15.5);" />
+		<hotspot name="op_seat_pl4" style="hot_dis" url="hotspot/behind/Seat_PL4_BW.png" onloaded="calcHotspotPos(65, 46, 33, 15.5);" />
+
+	</scene>
+
+	<!-- L1_锦•橙 -->
+	<scene name="l1_4wd_as_front" title="L1_4WD_AS_Front" onstart="" thumburl="panos/front/L1_4WD_AS.tiles/thumb.jpg" lat="" lng="" alt="" heading="">
+
+		<view hlookat="0.0" vlookat="15.0" fovtype="SFOV" fov="110" fovmin="80" fovmax="120" limitview="auto" />
+		<preview url="panos/front/L1_4WD_AS.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/front/L1_4WD_AS.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,640,1280,2560" />
+		</image>
+
+		<hotspot name="fix_rm" style="hot_vis" url="hotspot/front/RM.png" onloaded="calcHotspotPos(18, -31.8, -7, 3.8);" />
+		<hotspot name="thumb_seat_def" style="hot_dis" url="hotspot/front/thumb_Seat_Def_AS.png" onloaded="calcHotspotPos(90, -180, 57, -180);" />
+		<hotspot name="thumb_seat_pl4" style="hot_dis" url="hotspot/front/thumb_Seat_PL4_AS.png" onloaded="calcHotspotPos(90, -180, 57, -180);" />
+		<hotspot name="op_seat_def" style="hot_dis" url="hotspot/front/Seat_Def_AS.png" onloaded="calcHotspotPos(90, -180, 57, -180);" />
+		<hotspot name="op_seat_pl4" style="hot_dis" url="hotspot/front/Seat_PL4_AS.png" onloaded="calcHotspotPos(90, -180, 57, -180);" />
+
+	</scene>
+
+	<scene name="l1_4wd_as_behind" title="L1_4WD_AS_Behind" onstart="" thumburl="panos/behind/L1_4WD_AS.tiles/thumb.jpg" lat="" lng="" alt="" heading="">
+
+		<view hlookat="0.0" vlookat="10.0" fovtype="SFOV" fov="110" fovmin="80" fovmax="120" limitview="auto" />
+		<preview url="panos/behind/L1_4WD_AS.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/behind/L1_4WD_AS.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,640,1280,2560" />
+		</image>
+
+		<hotspot name="fix_rm" style="hot_vis" url="hotspot/behind/RM.png" onloaded="calcHotspotPos(15, 0, -1.3, 0);" />
+		<hotspot name="thumb_seat_def" style="hot_dis" url="hotspot/behind/thumb_Seat_Def_AS.png" onloaded="calcHotspotPos(65, 46, 33, 15.5);" />
+		<hotspot name="thumb_seat_pl4" style="hot_dis" url="hotspot/behind/thumb_Seat_PL4_AS.png" onloaded="calcHotspotPos(65, 46, 33, 15.5);" />
+		<hotspot name="op_seat_def" style="hot_dis" url="hotspot/behind/Seat_Def_AS.png" onloaded="calcHotspotPos(65, 46, 33, 15.5);" />
+		<hotspot name="op_seat_pl4" style="hot_dis" url="hotspot/behind/Seat_PL4_AS.png" onloaded="calcHotspotPos(65, 46, 33, 15.5);" />
+
+	</scene>
+
+	<!-- L2_墨•宝 -->
+	<scene name="l2_4wd_is_front" title="L2_4WD_IS_Front" onstart="" thumburl="panos/front/L2_4WD_IS.tiles/thumb.jpg" lat="" lng="" alt="" heading="">
+
+		<view hlookat="0.0" vlookat="15.0" fovtype="SFOV" fov="110" fovmin="80" fovmax="120" limitview="auto" />
+		<preview url="panos/front/L2_4WD_IS.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/front/L2_4WD_IS.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,640,1280,2560" />
+		</image>
+
+		<hotspot name="op_rm" style="hot_dis" url="hotspot/front/RM.png" onloaded="calcHotspotPos(18, -31.8, -7, 3.8);" />
+		<hotspot name="op_rm_sm" style="hot_dis" url="hotspot/front/RM_SM.png" onloaded="calcHotspotPos(18, -31.8, -7, 3.8);" />
+		<hotspot name="thumb_seat_def" style="hot_dis" url="hotspot/front/thumb_Seat_Def_IS.png" onloaded="calcHotspotPos(90, -180, 57, -180);" />
+		<hotspot name="thumb_seat_pl4" style="hot_dis" url="hotspot/front/thumb_Seat_PL4_IS.png" onloaded="calcHotspotPos(90, -180, 57, -180);" />
+		<hotspot name="op_seat_def" style="hot_dis" url="hotspot/front/Seat_Def_IS.png" onloaded="calcHotspotPos(90, -180, 57, -180);" />
+		<hotspot name="op_seat_pl4" style="hot_dis" url="hotspot/front/Seat_PL4_IS.png" onloaded="calcHotspotPos(90, -180, 57, -180);" />
+		<hotspot name="op_pl6" style="hot_dis" url="hotspot/front/PL6_IS.png" onloaded="calcHotspotPos(135, -90, 0, 74);" />
+		<hotspot name="op_pl6_p1" style="hot_dis" url="hotspot/front/PL6_IS_p1.png" onloaded="calcHotspotPos(20, -30, -20, 105);" />
+		<hotspot name="op_pl6_p2" style="hot_dis" url="hotspot/front/PL6_IS_p2.png" onloaded="calcHotspotPos(20, -165, -3, 73);" />
+
+	</scene>
+
+	<scene name="l2_4wd_is_behind" title="L2_4WD_IS_Behind" onstart="" thumburl="panos/behind/L2_4WD_IS.tiles/thumb.jpg" lat="" lng="" alt="" heading="">
+
+		<view hlookat="0.0" vlookat="10.0" fovtype="SFOV" fov="110" fovmin="80" fovmax="120" limitview="auto" />
+		<preview url="panos/behind/L2_4WD_IS.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/behind/L2_4WD_IS.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,640,1280,2560" />
+		</image>
+
+		<hotspot name="op_rm" style="hot_dis" url="hotspot/behind/RM.png" onloaded="calcHotspotPos(15, 0, -1.3, 0);" />
+		<hotspot name="op_rm_sm" style="hot_dis" url="hotspot/behind/RM_SM.png" onloaded="calcHotspotPos(15, 0, -1.3, 0);" />
+		<hotspot name="thumb_seat_def" style="hot_dis" url="hotspot/behind/thumb_Seat_Def_IS.png" onloaded="calcHotspotPos(65, 46, 33, 15.5);" />
+		<hotspot name="thumb_seat_pl4" style="hot_dis" url="hotspot/behind/thumb_Seat_PL4_IS.png" onloaded="calcHotspotPos(65, 46, 33, 15.5);" />
+		<hotspot name="op_seat_def" style="hot_dis" url="hotspot/behind/Seat_Def_IS.png" onloaded="calcHotspotPos(65, 46, 33, 15.5);" />
+		<hotspot name="op_seat_pl4" style="hot_dis" url="hotspot/behind/Seat_PL4_IS.png" onloaded="calcHotspotPos(65, 46, 33, 15.5);" />
+		<hotspot name="op_pl6" style="hot_dis" url="hotspot/behind/PL6.png" onloaded="calcHotspotPos(160, 0, -90, 0);" />
+		<hotspot name="op_pl6_p1" style="hot_dis" url="hotspot/behind/PL6_p1.png" onloaded="calcHotspotPos(120, 0, -12.5, 0);" />
+		<hotspot name="op_pl6_p2" style="hot_dis" url="hotspot/behind/PL6_p2.png" onloaded="calcHotspotPos(120, -180, 12.5, 0);" />
+
+	</scene>
+
+	<!-- L2_本•色 -->
+	<scene name="l2_4wd_bw_front" title="L2_4WD_BW_Front" onstart="" thumburl="panos/front/L2_4WD_BW.tiles/thumb.jpg" lat="" lng="" alt="" heading="">
+
+		<view hlookat="0.0" vlookat="15.0" fovtype="SFOV" fov="110" fovmin="80" fovmax="120" limitview="auto" />
+		<preview url="panos/front/L2_4WD_BW.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/front/L2_4WD_BW.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,640,1280,2560" />
+		</image>
+
+		<hotspot name="op_rm" style="hot_dis" url="hotspot/front/RM.png" onloaded="calcHotspotPos(18, -31.8, -7, 3.8);" />
+		<hotspot name="op_rm_sm" style="hot_dis" url="hotspot/front/RM_SM.png" onloaded="calcHotspotPos(18, -31.8, -7, 3.8);" />
+		<hotspot name="thumb_seat_def" style="hot_dis" url="hotspot/front/thumb_Seat_Def_BW.png" onloaded="calcHotspotPos(90, -180, 57, -180);" />
+		<hotspot name="thumb_seat_pl4" style="hot_dis" url="hotspot/front/thumb_Seat_PL4_BW.png" onloaded="calcHotspotPos(90, -180, 57, -180);" />
+		<hotspot name="op_seat_def" style="hot_dis" url="hotspot/front/Seat_Def_BW.png" onloaded="calcHotspotPos(90, -180, 57, -180);" />
+		<hotspot name="op_seat_pl4" style="hot_dis" url="hotspot/front/Seat_PL4_BW.png" onloaded="calcHotspotPos(90, -180, 57, -180);" />
+		<hotspot name="op_pl6" style="hot_dis" url="hotspot/front/PL6_BW.png" onloaded="calcHotspotPos(135, -90, 0, 74);" />
+		<hotspot name="op_pl6_p1" style="hot_dis" url="hotspot/front/PL6_BW_p1.png" onloaded="calcHotspotPos(20, -30, -20, 105);" />
+		<hotspot name="op_pl6_p2" style="hot_dis" url="hotspot/front/PL6_BW_p2.png" onloaded="calcHotspotPos(20, -165, -3, 73);" />
+
+	</scene>
+
+	<scene name="l2_4wd_bw_behind" title="L2_4WD_BW_Behind" onstart="" thumburl="panos/behind/L2_4WD_BW.tiles/thumb.jpg" lat="" lng="" alt="" heading="">
+
+		<view hlookat="0.0" vlookat="10.0" fovtype="SFOV" fov="110" fovmin="80" fovmax="120" limitview="auto" />
+		<preview url="panos/behind/L2_4WD_BW.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/behind/L2_4WD_BW.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,640,1280,2560" />
+		</image>
+
+		<hotspot name="op_rm" style="hot_dis" url="hotspot/behind/RM.png" onloaded="calcHotspotPos(15, 0, -1.3, 0);" />
+		<hotspot name="op_rm_sm" style="hot_dis" url="hotspot/behind/RM_SM.png" onloaded="calcHotspotPos(15, 0, -1.3, 0);" />
+		<hotspot name="thumb_seat_def" style="hot_dis" url="hotspot/behind/thumb_Seat_Def_BW.png" onloaded="calcHotspotPos(65, 46, 33, 15.5);" />
+		<hotspot name="thumb_seat_pl4" style="hot_dis" url="hotspot/behind/thumb_Seat_PL4_BW.png" onloaded="calcHotspotPos(65, 46, 33, 15.5);" />
+		<hotspot name="op_seat_def" style="hot_dis" url="hotspot/behind/Seat_Def_BW.png" onloaded="calcHotspotPos(65, 46, 33, 15.5);" />
+		<hotspot name="op_seat_pl4" style="hot_dis" url="hotspot/behind/Seat_PL4_BW.png" onloaded="calcHotspotPos(65, 46, 33, 15.5);" />
+		<hotspot name="op_pl6" style="hot_dis" url="hotspot/behind/PL6.png" onloaded="calcHotspotPos(160, 0, -90, 0);" />
+		<hotspot name="op_pl6_p1" style="hot_dis" url="hotspot/behind/PL6_p1.png" onloaded="calcHotspotPos(120, 0, -12.5, 0);" />
+		<hotspot name="op_pl6_p2" style="hot_dis" url="hotspot/behind/PL6_p2.png" onloaded="calcHotspotPos(120, -180, 12.5, 0);" />
+
+	</scene>
+
+	<!-- L2_锦•橙 -->
+	<scene name="l2_4wd_as_front" title="L2_4WD_AS_Front" onstart="" thumburl="panos/front/L2_4WD_AS.tiles/thumb.jpg" lat="" lng="" alt="" heading="">
+
+		<view hlookat="0.0" vlookat="15.0" fovtype="SFOV" fov="110" fovmin="80" fovmax="120" limitview="auto" />
+		<preview url="panos/front/L2_4WD_AS.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/front/L2_4WD_AS.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,640,1280,2560" />
+		</image>
+
+		<hotspot name="op_rm" style="hot_dis" url="hotspot/front/RM.png" onloaded="calcHotspotPos(18, -31.8, -7, 3.8);" />
+		<hotspot name="op_rm_sm" style="hot_dis" url="hotspot/front/RM_SM.png" onloaded="calcHotspotPos(18, -31.8, -7, 3.8);" />
+		<hotspot name="thumb_seat_def" style="hot_dis" url="hotspot/front/thumb_Seat_Def_AS.png" onloaded="calcHotspotPos(90, -180, 57, -180);" />
+		<hotspot name="thumb_seat_pl4" style="hot_dis" url="hotspot/front/thumb_Seat_PL4_AS.png" onloaded="calcHotspotPos(90, -180, 57, -180);" />
+		<hotspot name="op_seat_def" style="hot_dis" url="hotspot/front/Seat_Def_AS.png" onloaded="calcHotspotPos(90, -180, 57, -180);" />
+		<hotspot name="op_seat_pl4" style="hot_dis" url="hotspot/front/Seat_PL4_AS.png" onloaded="calcHotspotPos(90, -180, 57, -180);" />
+		<hotspot name="op_pl6" style="hot_dis" url="hotspot/front/PL6_AS.png" onloaded="calcHotspotPos(135, -90, 0, 74);" />
+		<hotspot name="op_pl6_p1" style="hot_dis" url="hotspot/front/PL6_AS_p1.png" onloaded="calcHotspotPos(20, -30, -20, 105);" />
+		<hotspot name="op_pl6_p2" style="hot_dis" url="hotspot/front/PL6_AS_p2.png" onloaded="calcHotspotPos(20, -165, -3, 73);" />
+
+	</scene>
+
+	<scene name="l2_4wd_as_behind" title="L2_4WD_AS_Behind" onstart="" thumburl="panos/behind/L2_4WD_AS.tiles/thumb.jpg" lat="" lng="" alt="" heading="">
+
+		<view hlookat="0.0" vlookat="10.0" fovtype="SFOV" fov="110" fovmin="80" fovmax="120" limitview="auto" />
+		<preview url="panos/behind/L2_4WD_AS.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/behind/L2_4WD_AS.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,640,1280,2560" />
+		</image>
+
+		<hotspot name="op_rm" style="hot_dis" url="hotspot/behind/RM.png" onloaded="calcHotspotPos(15, 0, -1.3, 0);" />
+		<hotspot name="op_rm_sm" style="hot_dis" url="hotspot/behind/RM_SM.png" onloaded="calcHotspotPos(15, 0, -1.3, 0);" />
+		<hotspot name="thumb_seat_def" style="hot_dis" url="hotspot/behind/thumb_Seat_Def_AS.png" onloaded="calcHotspotPos(65, 46, 33, 15.5);" />
+		<hotspot name="thumb_seat_pl4" style="hot_dis" url="hotspot/behind/thumb_Seat_PL4_AS.png" onloaded="calcHotspotPos(65, 46, 33, 15.5);" />
+		<hotspot name="op_seat_def" style="hot_dis" url="hotspot/behind/Seat_Def_AS.png" onloaded="calcHotspotPos(65, 46, 33, 15.5);" />
+		<hotspot name="op_seat_pl4" style="hot_dis" url="hotspot/behind/Seat_PL4_AS.png" onloaded="calcHotspotPos(65, 46, 33, 15.5);" />
+		<hotspot name="op_pl6" style="hot_dis" url="hotspot/behind/PL6.png" onloaded="calcHotspotPos(160, 0, -90, 0);" />
+		<hotspot name="op_pl6_p1" style="hot_dis" url="hotspot/behind/PL6_p1.png" onloaded="calcHotspotPos(120, 0, -12.5, 0);" />
+		<hotspot name="op_pl6_p2" style="hot_dis" url="hotspot/behind/PL6_p2.png" onloaded="calcHotspotPos(120, -180, 12.5, 0);" />
+
+	</scene>
+
+	<!-- L3_墨•宝 -->
+	<scene name="l3_4wd_is_front" title="L3_4WD_IS_Front" onstart="" thumburl="panos/front/L3_4WD_IS.tiles/thumb.jpg" lat="" lng="" alt="" heading="">
+
+		<view hlookat="0.0" vlookat="15.0" fovtype="SFOV" fov="110" fovmin="80" fovmax="120" limitview="auto" />
+		<preview url="panos/front/L3_4WD_IS.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/front/L3_4WD_IS.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,640,1280,2560" />
+		</image>
+
+		<hotspot name="fix_rm_sm" style="hot_vis" url="hotspot/front/RM_SM.png" onloaded="calcHotspotPos(18, -31.8, -7, 3.8);" />
+		<hotspot name="thumb_seat_pl4" style="hot_vis" url="hotspot/front/thumb_Seat_PL4_IS.png" onloaded="calcHotspotPos(90, -180, 57, -180);" />
+		<hotspot name="fix_seat_pl4" style="hot_vis" url="hotspot/front/Seat_PL4_IS.png" onloaded="calcHotspotPos(90, -180, 57, -180); delayVisible(seat_pl4)" />
+
+	</scene>
+
+	<scene name="l3_4wd_is_behind" title="L3_4WD_IS_Behind" onstart="" thumburl="panos/behind/L3_4WD_IS.tiles/thumb.jpg" lat="" lng="" alt="" heading="">
+
+		<view hlookat="0.0" vlookat="10.0" fovtype="SFOV" fov="110" fovmin="80" fovmax="120" limitview="auto" />
+		<preview url="panos/behind/L3_4WD_IS.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/behind/L3_4WD_IS.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,640,1280,2560" />
+		</image>
+
+		<hotspot name="fix_rm_sm" style="hot_vis" url="hotspot/behind/RM_SM.png" onloaded="calcHotspotPos(15, 0, -1.3, 0);" />
+		<hotspot name="thumb_seat_pl4" style="hot_vis" url="hotspot/behind/thumb_Seat_PL4_IS.png" onloaded="calcHotspotPos(65, 46, 33, 15.5);" />
+		<hotspot name="fix_seat_pl4" style="hot_vis" url="hotspot/behind/Seat_PL4_IS.png" onloaded="calcHotspotPos(65, 46, 33, 15.5); delayVisible(seat_pl4)" />
+
+	</scene>
+
+	<!-- L3_本•色 -->
+	<scene name="l3_4wd_bw_front" title="L3_4WD_BW_Front" onstart="" thumburl="panos/front/L3_4WD_BW.tiles/thumb.jpg" lat="" lng="" alt="" heading="">
+
+		<view hlookat="0.0" vlookat="15.0" fovtype="SFOV" fov="110" fovmin="80" fovmax="120" limitview="auto" />
+		<preview url="panos/front/L3_4WD_BW.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/front/L3_4WD_BW.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,640,1280,2560" />
+		</image>
+
+		<hotspot name="fix_rm_sm" style="hot_vis" url="hotspot/front/RM_SM.png" onloaded="calcHotspotPos(18, -31.8, -7, 3.8);" />
+		<hotspot name="thumb_seat_pl4" style="hot_vis" url="hotspot/front/thumb_Seat_PL4_BW.png" onloaded="calcHotspotPos(90, -180, 57, -180);" />
+		<hotspot name="fix_seat_pl4" style="hot_vis" url="hotspot/front/Seat_PL4_BW.png" onloaded="calcHotspotPos(90, -180, 57, -180); delayVisible(seat_pl4)" />
+
+	</scene>
+
+	<scene name="l3_4wd_bw_behind" title="L3_4WD_BW_Behind" onstart="" thumburl="panos/behind/L3_4WD_BW.tiles/thumb.jpg" lat="" lng="" alt="" heading="">
+
+		<view hlookat="0.0" vlookat="10.0" fovtype="SFOV" fov="110" fovmin="80" fovmax="120" limitview="auto" />
+		<preview url="panos/behind/L3_4WD_BW.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/behind/L3_4WD_BW.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,640,1280,2560" />
+		</image>
+
+		<hotspot name="fix_rm_sm" style="hot_vis" url="hotspot/behind/RM_SM.png" onloaded="calcHotspotPos(15, 0, -1.3, 0);" />
+		<hotspot name="thumb_seat_pl4" style="hot_vis" url="hotspot/behind/thumb_Seat_PL4_BW.png" onloaded="calcHotspotPos(65, 46, 33, 15.5);" />
+		<hotspot name="fix_seat_pl4" style="hot_vis" url="hotspot/behind/Seat_PL4_BW.png" onloaded="calcHotspotPos(65, 46, 33, 15.5); delayVisible(seat_pl4)" />
+
+	</scene>
+
+	<!-- L3_锦•橙 -->
+	<scene name="l3_4wd_as_front" title="L3_4WD_AS_Front" onstart="" thumburl="panos/front/L3_4WD_AS.tiles/thumb.jpg" lat="" lng="" alt="" heading="">
+
+		<view hlookat="0.0" vlookat="15.0" fovtype="SFOV" fov="110" fovmin="80" fovmax="120" limitview="auto" />
+		<preview url="panos/front/L3_4WD_AS.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/front/L3_4WD_AS.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,640,1280,2560" />
+		</image>
+
+		<hotspot name="fix_rm_sm" style="hot_vis" url="hotspot/front/RM_SM.png" onloaded="calcHotspotPos(18, -31.8, -7, 3.8);" />
+		<hotspot name="thumb_seat_pl4" style="hot_vis" url="hotspot/front/thumb_Seat_PL4_AS.png" onloaded="calcHotspotPos(90, -180, 57, -180);" />
+		<hotspot name="fix_seat_pl4" style="hot_vis" url="hotspot/front/Seat_PL4_AS.png" onloaded="calcHotspotPos(90, -180, 57, -180); delayVisible(seat_pl4)" />
+
+	</scene>
+
+	<scene name="l3_4wd_as_behind" title="L3_4WD_AS_Behind" onstart="" thumburl="panos/behind/L3_4WD_AS.tiles/thumb.jpg" lat="" lng="" alt="" heading="">
+
+		<view hlookat="0.0" vlookat="10.0" fovtype="SFOV" fov="110" fovmin="80" fovmax="120" limitview="auto" />
+		<preview url="panos/behind/L3_4WD_AS.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/behind/L3_4WD_AS.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,640,1280,2560" />
+		</image>
+
+		<hotspot name="fix_rm_sm" style="hot_vis" url="hotspot/behind/RM_SM.png" onloaded="calcHotspotPos(15, 0, -1.3, 0);" />
+		<hotspot name="thumb_seat_pl4" style="hot_vis" url="hotspot/behind/thumb_Seat_PL4_AS.png" onloaded="calcHotspotPos(65, 46, 33, 15.5);" />
+		<hotspot name="fix_seat_pl4" style="hot_vis" url="hotspot/behind/Seat_PL4_AS.png" onloaded="calcHotspotPos(65, 46, 33, 15.5); delayVisible(seat_pl4)" />
+
+	</scene>
+
+</krpano>

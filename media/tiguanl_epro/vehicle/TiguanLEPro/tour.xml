@@ -1,0 +1,210 @@
+﻿<krpano title="Virtual Tour" showlog="false" logkey="false" showerrors="false" onstart="startup">
+	<contextmenu fullscreen="false" versioninfo="false" />
+	<action name="startup" autorun="onstart">
+		set("autorotate.enabled",false);
+		set(org_vlookat,0);
+		set(org_hlookat,0);
+		set(count,0);
+		if(startscene === null OR !scene[get(startscene)], copy(startscene,scene[0].name); );
+		loadscene(get(startscene), null, MERGE);
+		if(startactions !== null, startactions() );
+	</action>
+
+	<action name="calcHotspotPos">
+		div(hfov,%1,57.295779);
+		div(yaw,%2,-57.295779);
+		div(pitch,%3,57.295779);
+		div(roll,%4,-57.295779);
+		mul(hfov,0.5);Math.tan(hfov);mul(width,hfov,1000);set(height,'prop');
+		Math.cos(ch,yaw);Math.sin(sh,yaw);
+		Math.cos(ca,pitch);Math.sin(sa,pitch);
+		Math.cos(cb,roll);Math.sin(sb,roll);
+		mul(m0,ca,ch);
+		mul(tmp,cb,sa);mul(tmp,ch);mul(tmp2,sb,sh);add(m3,tmp,tmp2);
+		mul(m4,cb,ca);
+		mul(tmp,cb,sa);mul(tmp,sh);mul(tmp2,sb,ch);sub(m5n,tmp,tmp2);mul(m5n,-1);
+		mul(tmp,sb,sa);mul(tmp,ch);mul(tmp2,cb,sh);sub(m6n,tmp,tmp2);mul(m6n,-1);
+		Math.atan2(yaw,m6n,m0);
+		Math.atan2(roll,m5n,m4);
+		Math.asin(pitch,m3);
+		mul(ath,yaw,57.295779);
+		mul(atv,pitch,57.295779);
+		mul(rotate,roll,57.295779);
+	</action>
+
+	<!-- hotspot[op_%1].addevent("onloaded", "delayedcall(0.1,set(hotspot[thumb_%1].visible,false);set(hotspot[op_%1].alpha,1););"); -->
+	<action name="setOptionHotspotVisible">
+		if(hotspot[op_%1] !== null AND hotspot[thumb_%1] !== null,
+		if(%2,
+		if(hotspot[op_%1].loaded,
+		set(hotspot[op_%1].visible,true);
+		set(hotspot[thumb_%1].visible,false);
+		,
+		set(hotspot[thumb_%1].visible,true);
+		set(hotspot[thumb_%1].alpha,1);
+		set(hotspot[op_%1].visible,true);
+		set(hotspot[op_%1].alpha,0);
+		hotspot[op_%1].addevent("onloaded", "delayVisible(%1);");
+		);
+		,
+		set(hotspot[op_%1].visible,false);
+		set(hotspot[thumb_%1].visible,false);
+		);
+		,
+		set(hotspot[op_%1].visible,%2);
+		if(hotspot[op_%1_p1] !== null, set(hotspot[op_%1_p1].visible,%2););
+		if(hotspot[op_%1_p2] !== null, set(hotspot[op_%1_p2].visible,%2););
+		);
+	</action>
+
+	<!-- 防止显示的时候跳一下 -->
+	<action name="delayVisible">
+		set(hotspot[op_%1].visible,true);
+		set(hotspot[op_%1].alpha,0);
+		set(hotspot[fix_%1].visible,true);
+		set(hotspot[fix_%1].alpha,0);
+		delayedcall(0.1,
+		set(hotspot[thumb_%1].visible,false);
+		set(hotspot[op_%1].alpha,1);
+		set(hotspot[fix_%1].alpha,1);
+		);
+	</action>
+
+	<style name="hot_vis" distorted="true" enabled="false" visible="true" alpha="1.0" />
+	<style name="hot_dis" distorted="true" enabled="false" visible="false" alpha="1.0" />
+
+
+	<!-- 豪华版_瑞雪白 -->
+	<scene name="BD13ZY_KY_Front" title="BD13ZY_KY_Front" onstart="" thumburl="panos/BD13ZY_KY_Front.tiles/thumb.jpg" lat="" lng="" alt="" heading="">
+
+		<view hlookat="0.0" vlookat="15.0" fovtype="DFOV" fov="110" fovmin="80" fovmax="120" limitview="auto" />
+		<preview url="panos/BD13ZY_KY_Front.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/BD13ZY_KY_Front.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,768,1664,3200" />
+		</image>
+
+		<hotspot name="op_ExtColor_0Q0Q" style="hot_dis" url="hotspot/ExtColor_Front_0Q0Q.png" onloaded="calcHotspotPos(105, -12, 8, 0);" />
+		<hotspot name="op_ExtColor_2T2T" style="hot_dis" url="hotspot/ExtColor_Front_2T2T.png" onloaded="calcHotspotPos(105, -12, 8, 0);" />
+		<hotspot name="op_ExtColor_6U6U" style="hot_dis" url="hotspot/ExtColor_Front_6U6U.png" onloaded="calcHotspotPos(105, -12, 8, 0);" />
+		<hotspot name="op_ExtColor_J5J5" style="hot_dis" url="hotspot/ExtColor_Front_J5J5.png" onloaded="calcHotspotPos(105, -12, 8, 0);" />
+		<hotspot name="op_ExtColor_U7U7" style="hot_dis" url="hotspot/ExtColor_Front_U7U7.png" onloaded="calcHotspotPos(105, -12, 8, 0);" />
+
+	</scene>
+
+	<scene name="BD13ZY_KY_Behind" title="BD13ZY_KY_Behind" onstart="" thumburl="panos/BD13ZY_KY_Behind.tiles/thumb.jpg" lat="" lng="" alt="" heading="">
+
+		<view hlookat="0.0" vlookat="15.0" fovtype="DFOV" fov="110" fovmin="80" fovmax="120" limitview="auto" />
+		<preview url="panos/BD13ZY_KY_Behind.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/BD13ZY_KY_Behind.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,768,1664,3200" />
+		</image>
+
+		<hotspot name="op_ExtColor_0Q0Q" style="hot_dis" url="hotspot/ExtColor_Behind_0Q0Q.png" onloaded="calcHotspotPos(78, 0, 5, 0);" />
+		<hotspot name="op_ExtColor_2T2T" style="hot_dis" url="hotspot/ExtColor_Behind_2T2T.png" onloaded="calcHotspotPos(78, 0, 5, 0);" />
+		<hotspot name="op_ExtColor_6U6U" style="hot_dis" url="hotspot/ExtColor_Behind_6U6U.png" onloaded="calcHotspotPos(78, 0, 5, 0);" />
+		<hotspot name="op_ExtColor_J5J5" style="hot_dis" url="hotspot/ExtColor_Behind_J5J5.png" onloaded="calcHotspotPos(78, 0, 5, 0);" />
+		<hotspot name="op_ExtColor_U7U7" style="hot_dis" url="hotspot/ExtColor_Behind_U7U7.png" onloaded="calcHotspotPos(78, 0, 5, 0);" />
+
+	</scene>
+
+	<!-- 豪华版_星穹黑 -->
+	<scene name="BD13ZY_RQ_Front" title="BD13ZY_RQ_Front" onstart="" thumburl="panos/BD13ZY_RQ_Front.tiles/thumb.jpg" lat="" lng="" alt="" heading="">
+
+		<view hlookat="0.0" vlookat="15.0" fovtype="DFOV" fov="110" fovmin="80" fovmax="120" limitview="auto" />
+		<preview url="panos/BD13ZY_RQ_Front.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/BD13ZY_RQ_Front.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,768,1664,3200" />
+		</image>
+
+		<hotspot name="op_ExtColor_0Q0Q" style="hot_dis" url="hotspot/ExtColor_Front_0Q0Q.png" onloaded="calcHotspotPos(105, -12, 8, 0);" />
+		<hotspot name="op_ExtColor_2T2T" style="hot_dis" url="hotspot/ExtColor_Front_2T2T.png" onloaded="calcHotspotPos(105, -12, 8, 0);" />
+		<hotspot name="op_ExtColor_6U6U" style="hot_dis" url="hotspot/ExtColor_Front_6U6U.png" onloaded="calcHotspotPos(105, -12, 8, 0);" />
+		<hotspot name="op_ExtColor_J5J5" style="hot_dis" url="hotspot/ExtColor_Front_J5J5.png" onloaded="calcHotspotPos(105, -12, 8, 0);" />
+		<hotspot name="op_ExtColor_U7U7" style="hot_dis" url="hotspot/ExtColor_Front_U7U7.png" onloaded="calcHotspotPos(105, -12, 8, 0);" />
+
+	</scene>
+
+	<scene name="BD13ZY_RQ_Behind" title="BD13ZY_RQ_Behind" onstart="" thumburl="panos/BD13ZY_RQ_Behind.tiles/thumb.jpg" lat="" lng="" alt="" heading="">
+
+		<view hlookat="0.0" vlookat="15.0" fovtype="DFOV" fov="110" fovmin="80" fovmax="120" limitview="auto" />
+		<preview url="panos/BD13ZY_RQ_Behind.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/BD13ZY_RQ_Behind.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,768,1664,3200" />
+		</image>
+
+		<hotspot name="op_ExtColor_0Q0Q" style="hot_dis" url="hotspot/ExtColor_Behind_0Q0Q.png" onloaded="calcHotspotPos(78, 0, 5, 0);" />
+		<hotspot name="op_ExtColor_2T2T" style="hot_dis" url="hotspot/ExtColor_Behind_2T2T.png" onloaded="calcHotspotPos(78, 0, 5, 0);" />
+		<hotspot name="op_ExtColor_6U6U" style="hot_dis" url="hotspot/ExtColor_Behind_6U6U.png" onloaded="calcHotspotPos(78, 0, 5, 0);" />
+		<hotspot name="op_ExtColor_J5J5" style="hot_dis" url="hotspot/ExtColor_Behind_J5J5.png" onloaded="calcHotspotPos(78, 0, 5, 0);" />
+		<hotspot name="op_ExtColor_U7U7" style="hot_dis" url="hotspot/ExtColor_Behind_U7U7.png" onloaded="calcHotspotPos(78, 0, 5, 0);" />
+
+	</scene>
+
+	<!-- 旗舰版_瑞雪白 -->
+	<scene name="BD14ZY_KY_Front" title="BD14ZY_KY_Front" onstart="" thumburl="panos/BD14ZY_KY_Front.tiles/thumb.jpg" lat="" lng="" alt="" heading="">
+
+		<view hlookat="0.0" vlookat="15.0" fovtype="DFOV" fov="110" fovmin="80" fovmax="120" limitview="auto" />
+		<preview url="panos/BD14ZY_KY_Front.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/BD14ZY_KY_Front.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,768,1664,3200" />
+		</image>
+
+		<hotspot name="op_ExtColor_0Q0Q" style="hot_dis" url="hotspot/ExtColor_Front_0Q0Q.png" onloaded="calcHotspotPos(105, -12, 8, 0);" />
+		<hotspot name="op_ExtColor_2T2T" style="hot_dis" url="hotspot/ExtColor_Front_2T2T.png" onloaded="calcHotspotPos(105, -12, 8, 0);" />
+		<hotspot name="op_ExtColor_6U6U" style="hot_dis" url="hotspot/ExtColor_Front_6U6U.png" onloaded="calcHotspotPos(105, -12, 8, 0);" />
+		<hotspot name="op_ExtColor_J5J5" style="hot_dis" url="hotspot/ExtColor_Front_J5J5.png" onloaded="calcHotspotPos(105, -12, 8, 0);" />
+		<hotspot name="op_ExtColor_U7U7" style="hot_dis" url="hotspot/ExtColor_Front_U7U7.png" onloaded="calcHotspotPos(105, -12, 8, 0);" />
+
+	</scene>
+
+	<scene name="BD14ZY_KY_Behind" title="BD14ZY_KY_Behind" onstart="" thumburl="panos/BD14ZY_KY_Behind.tiles/thumb.jpg" lat="" lng="" alt="" heading="">
+
+		<view hlookat="0.0" vlookat="15.0" fovtype="DFOV" fov="110" fovmin="80" fovmax="120" limitview="auto" />
+		<preview url="panos/BD14ZY_KY_Behind.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/BD14ZY_KY_Behind.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,768,1664,3200" />
+		</image>
+
+		<hotspot name="op_ExtColor_0Q0Q" style="hot_dis" url="hotspot/ExtColor_Behind_0Q0Q.png" onloaded="calcHotspotPos(78, 0, 5, 0);" />
+		<hotspot name="op_ExtColor_2T2T" style="hot_dis" url="hotspot/ExtColor_Behind_2T2T.png" onloaded="calcHotspotPos(78, 0, 5, 0);" />
+		<hotspot name="op_ExtColor_6U6U" style="hot_dis" url="hotspot/ExtColor_Behind_6U6U.png" onloaded="calcHotspotPos(78, 0, 5, 0);" />
+		<hotspot name="op_ExtColor_J5J5" style="hot_dis" url="hotspot/ExtColor_Behind_J5J5.png" onloaded="calcHotspotPos(78, 0, 5, 0);" />
+		<hotspot name="op_ExtColor_U7U7" style="hot_dis" url="hotspot/ExtColor_Behind_U7U7.png" onloaded="calcHotspotPos(78, 0, 5, 0);" />
+
+	</scene>
+
+	<!-- 旗舰版_星穹黑 -->
+	<scene name="BD14ZY_JK_Front" title="BD14ZY_JK_Front" onstart="" thumburl="panos/BD14ZY_JK_Front.tiles/thumb.jpg" lat="" lng="" alt="" heading="">
+
+		<view hlookat="0.0" vlookat="15.0" fovtype="DFOV" fov="110" fovmin="80" fovmax="120" limitview="auto" />
+		<preview url="panos/BD14ZY_JK_Front.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/BD14ZY_JK_Front.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,768,1664,3200" />
+		</image>
+
+		<hotspot name="op_ExtColor_0Q0Q" style="hot_dis" url="hotspot/ExtColor_Front_0Q0Q.png" onloaded="calcHotspotPos(105, -12, 8, 0);" />
+		<hotspot name="op_ExtColor_2T2T" style="hot_dis" url="hotspot/ExtColor_Front_2T2T.png" onloaded="calcHotspotPos(105, -12, 8, 0);" />
+		<hotspot name="op_ExtColor_6U6U" style="hot_dis" url="hotspot/ExtColor_Front_6U6U.png" onloaded="calcHotspotPos(105, -12, 8, 0);" />
+		<hotspot name="op_ExtColor_J5J5" style="hot_dis" url="hotspot/ExtColor_Front_J5J5.png" onloaded="calcHotspotPos(105, -12, 8, 0);" />
+		<hotspot name="op_ExtColor_U7U7" style="hot_dis" url="hotspot/ExtColor_Front_U7U7.png" onloaded="calcHotspotPos(105, -12, 8, 0);" />
+
+	</scene>
+
+	<scene name="BD14ZY_JK_Behind" title="BD14ZY_JK_Behind" onstart="" thumburl="panos/BD14ZY_JK_Behind.tiles/thumb.jpg" lat="" lng="" alt="" heading="">
+
+		<view hlookat="0.0" vlookat="15.0" fovtype="DFOV" fov="110" fovmin="80" fovmax="120" limitview="auto" />
+		<preview url="panos/BD14ZY_JK_Behind.tiles/preview.jpg" />
+		<image>
+			<cube url="panos/BD14ZY_JK_Behind.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,768,1664,3200" />
+		</image>
+
+		<hotspot name="op_ExtColor_0Q0Q" style="hot_dis" url="hotspot/ExtColor_Behind_0Q0Q.png" onloaded="calcHotspotPos(78, 0, 5, 0);" />
+		<hotspot name="op_ExtColor_2T2T" style="hot_dis" url="hotspot/ExtColor_Behind_2T2T.png" onloaded="calcHotspotPos(78, 0, 5, 0);" />
+		<hotspot name="op_ExtColor_6U6U" style="hot_dis" url="hotspot/ExtColor_Behind_6U6U.png" onloaded="calcHotspotPos(78, 0, 5, 0);" />
+		<hotspot name="op_ExtColor_J5J5" style="hot_dis" url="hotspot/ExtColor_Behind_J5J5.png" onloaded="calcHotspotPos(78, 0, 5, 0);" />
+		<hotspot name="op_ExtColor_U7U7" style="hot_dis" url="hotspot/ExtColor_Behind_U7U7.png" onloaded="calcHotspotPos(78, 0, 5, 0);" />
+
+	</scene>
+
+
+</krpano>
